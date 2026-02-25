@@ -4,6 +4,7 @@
 -- Drop tables if they exist (for clean installation)
 DROP TABLE IF EXISTS bills;
 DROP TABLE IF EXISTS reservations;
+DROP TABLE IF EXISTS rooms;
 DROP TABLE IF EXISTS guests;
 DROP TABLE IF EXISTS users;
 
@@ -33,6 +34,21 @@ CREATE TABLE guests (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX idx_contact (contact_number),
     INDEX idx_email (email)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Rooms Table (Manager Only - Add/Update)
+CREATE TABLE rooms (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    room_number VARCHAR(10) UNIQUE NOT NULL,
+    room_type ENUM('SINGLE', 'DOUBLE', 'SUITE') NOT NULL,
+    capacity INT NOT NULL,
+    price_per_night DECIMAL(10, 2) NOT NULL,
+    status ENUM('AVAILABLE', 'BOOKED', 'MAINTENANCE') DEFAULT 'AVAILABLE',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_room_number (room_number),
+    INDEX idx_room_type (room_type),
+    INDEX idx_status (status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Reservations Table
@@ -107,6 +123,15 @@ INSERT INTO bills (reservation_id, nights, rate_per_night, total_amount, generat
 (1, 4, 150.00, 600.00, '2026-03-05', FALSE),
 (2, 5, 250.00, 1250.00, '2026-03-15', FALSE),
 (3, 3, 100.00, 300.00, '2026-03-23', FALSE);
+
+-- Insert sample rooms for testing
+INSERT INTO rooms (room_number, room_type, capacity, price_per_night, status) VALUES
+('101', 'SINGLE', 1, 100.00, 'AVAILABLE'),
+('102', 'SINGLE', 1, 100.00, 'AVAILABLE'),
+('201', 'DOUBLE', 2, 150.00, 'AVAILABLE'),
+('202', 'DOUBLE', 2, 150.00, 'BOOKED'),
+('301', 'SUITE', 4, 250.00, 'AVAILABLE'),
+('302', 'SUITE', 4, 250.00, 'MAINTENANCE');
 
 -- Display a success message
 SELECT 'Database schema created successfully!' as Message;

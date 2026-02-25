@@ -95,6 +95,28 @@ public class UserService {
     }
 
     /**
+     * Get user details by username
+     * @param username The username
+     * @return User object without password
+     */
+    public User getUserByUsername(String username) {
+        if (username == null || username.trim().isEmpty()) {
+            throw new ValidationException("Username is required");
+        }
+
+        User user = userRepository.findByUsername(username);
+
+        if (user == null) {
+            throw new UserNotFoundException("User not found");
+        }
+
+        // Remove password before returning
+        user.setPassword(null);
+
+        return user;
+    }
+
+    /**
      * Update user details (name, role, active status)
      * @param userId The user UUID
      * @param name The updated name

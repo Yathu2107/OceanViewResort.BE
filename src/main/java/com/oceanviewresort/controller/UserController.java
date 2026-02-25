@@ -64,10 +64,55 @@ public class UserController implements HttpHandler {
 
         if (path.endsWith("/register")) {
             handleRegister(exchange);
+        } else if (path.endsWith("/me")) {
+            handleGetLoggedUserDetails(exchange);
         } else if (path.matches(".*/user/[a-f0-9-]+$")) {
             handleUpdate(exchange);
         } else {
             JsonUtil.sendError(exchange, 404, "Endpoint not found");
+        }
+    }
+
+    private void handleGetLoggedUserDetails(HttpExchange exchange) throws IOException {
+
+        if (!exchange.getRequestMethod().equalsIgnoreCase("GET")) {
+            JsonUtil.sendError(exchange, 405, "Method not allowed");
+            return;
+        }
+
+        try {
+            // Authenticate user
+            String token = extractAndValidateToken(exchange);
+            String username = JwtUtil.getUsernameFromToken(token);
+
+            // Get user details
+            com.oceanviewresort.model.User user = userService.getUserByUsername(username);
+
+            // Build response
+            JsonObject response = new JsonObject();
+            response.addProperty("id", user.getId());
+            response.addProperty("name", user.getName());
+            response.addProperty("username", user.getUsername());
+            response.addProperty("role", user.getRole());
+            response.addProperty("is_active", user.isActive());
+
+            JsonUtil.sendJsonWithMessage(exchange, "User details retrieved successfully", response);
+
+        } catch (UnauthorizedException e) {
+            System.err.println("Unauthorized: " + e.getMessage());
+            JsonUtil.sendError(exchange, 401, e.getMessage());
+        } catch (UserNotFoundException e) {
+            System.err.println("User Not Found: " + e.getMessage());
+            JsonUtil.sendError(exchange, 404, e.getMessage());
+        } catch (ValidationException e) {
+            System.err.println("Validation Error: " + e.getMessage());
+            JsonUtil.sendError(exchange, 400, e.getMessage());
+        } catch (Exception e) {
+            System.err.println("Unexpected Error in UserController:");
+            System.err.println("Error Type: " + e.getClass().getName());
+            System.err.println("Error Message: " + e.getMessage());
+            e.printStackTrace();
+            JsonUtil.sendError(exchange, 500, "Something went wrong, please try again");
         }
     }
 

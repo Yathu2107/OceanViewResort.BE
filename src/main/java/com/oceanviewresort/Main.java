@@ -27,6 +27,8 @@ public class Main {
                     createLoggingHandler(new UserController(), "/user/register"));
             server.createContext("/user",
                     createLoggingHandler(new UserController(), "/user"));
+            server.createContext("/user/me",
+                    createLoggingHandler(new UserController(), "/user/me"));
             server.createContext("/reservations",
                     createLoggingHandler(new ReservationController(), "/reservations"));
             server.createContext("/billing/checkout",

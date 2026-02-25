@@ -48,6 +48,32 @@ public class JwtUtil {
         }
     }
 
+    public static String getUsernameFromToken(String token) {
+        try {
+            String[] parts = token.split("\\.");
+            if (parts.length != 3) return null;
+
+            String payloadJson = new String(Base64.getUrlDecoder().decode(parts[1]));
+            String username = payloadJson.split("\"sub\":\"")[1].split("\"")[0];
+            return username;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public static String getRoleFromToken(String token) {
+        try {
+            String[] parts = token.split("\\.");
+            if (parts.length != 3) return null;
+
+            String payloadJson = new String(Base64.getUrlDecoder().decode(parts[1]));
+            String role = payloadJson.split("\"role\":\"")[1].split("\"")[0];
+            return role;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
     private static String sign(String data) {
         try {
             Mac mac = Mac.getInstance("HmacSHA256");

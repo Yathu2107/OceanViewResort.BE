@@ -172,6 +172,38 @@ public class UserRepository {
     }
 
     /**
+     * Update user details (name, role, is_active)
+     * @param user The user with updated details
+     */
+    public void updateUser(User user) {
+        String sql = "UPDATE users SET name = ?, role = ?, is_active = ? WHERE id = ?";
+
+        Connection conn = null;
+        PreparedStatement ps = null;
+
+        try {
+            conn = DatabaseConnection.getConnection();
+            ps = conn.prepareStatement(sql);
+
+            ps.setString(1, user.getName());
+            ps.setString(2, user.getRole());
+            ps.setBoolean(3, user.isActive());
+            ps.setString(4, user.getId());
+
+            int affectedRows = ps.executeUpdate();
+
+            if (affectedRows == 0) {
+                throw new DatabaseException("User not found with ID: " + user.getId());
+            }
+
+        } catch (SQLException e) {
+            throw new DatabaseException("Failed to update user with ID: " + user.getId(), e);
+        } finally {
+            closeResources(null, ps, conn);
+        }
+    }
+
+    /**
      * Update user active status
      * @param userId The user UUID
      * @param isActive The active status
@@ -203,7 +235,7 @@ public class UserRepository {
     }
 
     /**
-     * Check if username already exists
+     * Check if a username already exists
      * @param username The username to check
      * @return true if exists, false otherwise
      */

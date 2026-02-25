@@ -77,7 +77,7 @@ VALUES ('550e8400-e29b-41d4-a716-446655440000',
         'System Administrator',
         'admin',
         'TEMP_HASH_WILL_BE_REPLACED',
-        'ADMIN',
+        'MANAGER',
         TRUE);
 
 -- Insert default staff user (password: staff123)

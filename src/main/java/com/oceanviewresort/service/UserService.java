@@ -18,7 +18,7 @@ public class UserService {
     private final UserRepository userRepository = new UserRepository();
 
     /**
-     * Authenticate user with username and password
+     * Authenticate a user with a username and password
      * @param username The username
      * @param password The plain text password
      * @return JWT token if authentication successful
@@ -52,14 +52,15 @@ public class UserService {
     }
 
     /**
-     * Register a new user with hashed password
+     * Register a new user with a hashed password
      * @param name The full name
      * @param username The username
      * @param plainPassword The plain text password
      * @param role The user role (ADMIN, STAFF, etc.)
+     * @param isActive The active status
      * @return The UUID of the created user
      */
-    public String registerUser(String name, String username, String plainPassword, String role) {
+    public String registerUser(String name, String username, String plainPassword, String role, boolean isActive) {
 
         if (name == null || name.trim().isEmpty()) {
             throw new ValidationException("Name is required");
@@ -77,20 +78,49 @@ public class UserService {
             throw new ValidationException("Role is required");
         }
 
-        // Check if username already exists
+        // Check if a username already exists
         if (userRepository.usernameExists(username)) {
             throw new ValidationException("Username already exists");
         }
 
-        // Create new user
+        // Create a new user
         User user = new User();
         user.setName(name);
         user.setUsername(username);
         user.setRole(role.toUpperCase());
-        user.setActive(true);
+        user.setActive(isActive);
 
-        // Create user with hashed password
+        // Create a user with a hashed password
         return userRepository.createUser(user, plainPassword);
+    }
+
+    /**
+     * Update user details (name, role, active status)
+     * @param userId The user UUID
+     * @param name The updated name
+     * @param role The updated role
+     * @param isActive The updated active status
+     */
+    public void updateUser(String userId, String name, String role, Boolean isActive) {
+        User user = userRepository.findById(userId);
+
+        if (user == null) {
+            throw new UserNotFoundException("User not found");
+        }
+
+        if (name != null && !name.trim().isEmpty()) {
+            user.setName(name);
+        }
+
+        if (role != null && !role.trim().isEmpty()) {
+            user.setRole(role.toUpperCase());
+        }
+
+        if (isActive != null) {
+            user.setActive(isActive);
+        }
+
+        userRepository.updateUser(user);
     }
 
     /**
@@ -116,7 +146,7 @@ public class UserService {
             throw new InvalidCredentialsException("Current password is incorrect");
         }
 
-        // Update with new hashed password
+        // Update with a new hashed password
         userRepository.updatePassword(userId, newPassword);
     }
 
@@ -130,7 +160,7 @@ public class UserService {
     }
 
     /**
-     * Activate or deactivate user account
+     * Activate or deactivate a user account
      * @param userId The user UUID
      * @param isActive The active status
      */

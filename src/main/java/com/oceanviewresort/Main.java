@@ -3,6 +3,7 @@ package com.oceanviewresort;
 import com.oceanviewresort.controller.AuthController;
 import com.oceanviewresort.controller.BillingController;
 import com.oceanviewresort.controller.DashboardController;
+import com.oceanviewresort.controller.GuestController;
 import com.oceanviewresort.controller.ReservationController;
 import com.oceanviewresort.controller.RoomController;
 import com.oceanviewresort.controller.UserController;
@@ -39,6 +40,8 @@ public class Main {
                     createLoggingHandler(new RoomController(), "/rooms"));
             server.createContext("/dashboard",
                     createLoggingHandler(new DashboardController(), "/dashboard"));
+            server.createContext("/guests",
+                    createLoggingHandler(new GuestController(), "/guests"));
 
             server.setExecutor(null);
             server.start();

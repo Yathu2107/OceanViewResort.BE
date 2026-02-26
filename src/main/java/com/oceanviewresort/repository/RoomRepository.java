@@ -175,6 +175,36 @@ public class RoomRepository {
     }
 
     /**
+     * Get rooms by status
+     */
+    public List<Room> findByStatus(String status) {
+        List<Room> rooms = new ArrayList<>();
+        String sql = "SELECT * FROM rooms WHERE status = ? ORDER BY room_number";
+
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+
+        try {
+            conn = DatabaseConnection.getConnection();
+            ps = conn.prepareStatement(sql);
+            ps.setString(1, status);
+            rs = ps.executeQuery();
+
+            while (rs.next()) {
+                rooms.add(mapResultSetToRoom(rs));
+            }
+
+            return rooms;
+
+        } catch (SQLException e) {
+            throw new DatabaseException("Failed to retrieve rooms with status: " + status, e);
+        } finally {
+            closeResources(rs, ps, conn);
+        }
+    }
+
+    /**
      * Delete room by ID
      */
     public void deleteById(int roomId) {

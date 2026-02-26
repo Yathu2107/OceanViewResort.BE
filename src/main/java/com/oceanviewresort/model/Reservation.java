@@ -2,23 +2,28 @@ package com.oceanviewresort.model;
 
 import java.time.LocalDate;
 
+/**
+ * Reservation entity representing guest reservations
+ * Uses room_id instead of room_type for better relationship management
+ * Status values: OCCUPIED, COMPLETED
+ */
 public class Reservation {
 
     private int reservationId;
     private Guest guest;
-    private String roomType;
+    private int roomId;
     private LocalDate checkInDate;
     private LocalDate checkOutDate;
-    private String status; // BOOKED, CHECKED_OUT, CANCELLED
+    private String status; // OCCUPIED, COMPLETED
 
     public Reservation() {
     }
 
-    public Reservation(int reservationId, Guest guest, String roomType,
-                       LocalDate checkInDate, LocalDate checkOutDate, String status) {
+    public Reservation(int reservationId, Guest guest, int roomId,
+            LocalDate checkInDate, LocalDate checkOutDate, String status) {
         this.reservationId = reservationId;
         this.guest = guest;
-        this.roomType = roomType;
+        this.roomId = roomId;
         this.checkInDate = checkInDate;
         this.checkOutDate = checkOutDate;
         this.status = status;
@@ -40,12 +45,12 @@ public class Reservation {
         this.guest = guest;
     }
 
-    public String getRoomType() {
-        return roomType;
+    public int getRoomId() {
+        return roomId;
     }
 
-    public void setRoomType(String roomType) {
-        this.roomType = roomType;
+    public void setRoomId(int roomId) {
+        this.roomId = roomId;
     }
 
     public LocalDate getCheckInDate() {

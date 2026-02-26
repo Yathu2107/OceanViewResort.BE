@@ -11,18 +11,20 @@ import java.util.List;
 
 /**
  * Repository for Reservation entity
- * Handles all database operations for reservations with proper JDBC best practices
+ * Handles all database operations for reservations with proper JDBC best
+ * practices
  */
 public class ReservationRepository {
 
     /**
      * Save a new reservation
+     * 
      * @param reservation The reservation to save
      * @return The ID of the created reservation
      */
     public int saveReservation(Reservation reservation) {
-        String sql = "INSERT INTO reservations (guest_id, room_type, check_in, check_out, status) " +
-                     "VALUES (?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO reservations (guest_id, room_id, check_in, check_out, status) " +
+                "VALUES (?, ?, ?, ?, ?)";
 
         Connection conn = null;
         PreparedStatement ps = null;
@@ -33,7 +35,7 @@ public class ReservationRepository {
             ps = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS);
 
             ps.setInt(1, reservation.getGuest().getId());
-            ps.setString(2, reservation.getRoomType());
+            ps.setInt(2, reservation.getRoomId());
             ps.setDate(3, Date.valueOf(reservation.getCheckInDate()));
             ps.setDate(4, Date.valueOf(reservation.getCheckOutDate()));
             ps.setString(5, reservation.getStatus());
@@ -60,15 +62,16 @@ public class ReservationRepository {
 
     /**
      * Find reservation by ID with guest details
+     * 
      * @param reservationId The reservation ID
      * @return Reservation object or null if not found
      */
     public Reservation findById(int reservationId) {
-        String sql = "SELECT r.id, r.guest_id, r.room_type, r.check_in, r.check_out, r.status, " +
-                     "g.name, g.address, g.contact_number, g.email " +
-                     "FROM reservations r " +
-                     "JOIN guests g ON r.guest_id = g.id " +
-                     "WHERE r.id = ?";
+        String sql = "SELECT r.id, r.guest_id, r.room_id, r.check_in, r.check_out, r.status, " +
+                "g.name, g.address, g.contact_number, g.email " +
+                "FROM reservations r " +
+                "JOIN guests g ON r.guest_id = g.id " +
+                "WHERE r.id = ?";
 
         Connection conn = null;
         PreparedStatement ps = null;
@@ -79,14 +82,21 @@ public class ReservationRepository {
             ps = conn.prepareStatement(sql);
             ps.setInt(1, reservationId);
 
+            System.out.println("[DB QUERY] Executing: SELECT reservation with guest details for ID: " + reservationId);
+
             rs = ps.executeQuery();
 
             if (rs.next()) {
-                return mapResultSetToReservation(rs);
+                Reservation reservation = mapResultSetToReservation(rs);
+                System.out.println("[DB QUERY] Retrieved guest email: " + rs.getString("email"));
+                return reservation;
             }
+            System.out.println("[DB QUERY] No reservation found with ID: " + reservationId);
             return null;
 
         } catch (SQLException e) {
+            System.err.println("[DB ERROR] Failed to fetch reservation with ID: " + reservationId);
+            System.err.println("[DB ERROR] SQL Error: " + e.getMessage());
             throw new DatabaseException("Failed to fetch reservation with ID: " + reservationId, e);
         } finally {
             closeResources(rs, ps, conn);
@@ -95,16 +105,17 @@ public class ReservationRepository {
 
     /**
      * Find all reservations by guest ID
+     * 
      * @param guestId The guest ID
      * @return List of reservations
      */
     public List<Reservation> findByGuestId(int guestId) {
-        String sql = "SELECT r.id, r.guest_id, r.room_type, r.check_in, r.check_out, r.status, " +
-                     "g.name, g.address, g.contact_number, g.email " +
-                     "FROM reservations r " +
-                     "JOIN guests g ON r.guest_id = g.id " +
-                     "WHERE r.guest_id = ? " +
-                     "ORDER BY r.check_in DESC";
+        String sql = "SELECT r.id, r.guest_id, r.room_id, r.check_in, r.check_out, r.status, " +
+                "g.name, g.address, g.contact_number, g.email " +
+                "FROM reservations r " +
+                "JOIN guests g ON r.guest_id = g.id " +
+                "WHERE r.guest_id = ? " +
+                "ORDER BY r.check_in DESC";
 
         Connection conn = null;
         PreparedStatement ps = null;
@@ -133,8 +144,9 @@ public class ReservationRepository {
 
     /**
      * Update reservation status
+     * 
      * @param reservationId The reservation ID
-     * @param status The new status
+     * @param status        The new status
      */
     public void updateStatus(int reservationId, String status) {
         String sql = "UPDATE reservations SET status = ? WHERE id = ?";
@@ -163,7 +175,42 @@ public class ReservationRepository {
     }
 
     /**
+     * Update reservation details (room_id, check_in, check_out dates, and status)
+     * 
+     * @param reservation The updated reservation object
+     */
+    public void updateReservation(Reservation reservation) {
+        String sql = "UPDATE reservations SET room_id = ?, check_in = ?, check_out = ?, status = ? WHERE id = ?";
+
+        Connection conn = null;
+        PreparedStatement ps = null;
+
+        try {
+            conn = DatabaseConnection.getConnection();
+            ps = conn.prepareStatement(sql);
+
+            ps.setInt(1, reservation.getRoomId());
+            ps.setDate(2, Date.valueOf(reservation.getCheckInDate()));
+            ps.setDate(3, Date.valueOf(reservation.getCheckOutDate()));
+            ps.setString(4, reservation.getStatus());
+            ps.setInt(5, reservation.getReservationId());
+
+            int affectedRows = ps.executeUpdate();
+
+            if (affectedRows == 0) {
+                throw new DatabaseException("Reservation not found with ID: " + reservation.getReservationId());
+            }
+
+        } catch (SQLException e) {
+            throw new DatabaseException("Failed to update reservation with ID: " + reservation.getReservationId(), e);
+        } finally {
+            closeResources(null, ps, conn);
+        }
+    }
+
+    /**
      * Delete reservation (soft delete by updating status)
+     * 
      * @param reservationId The reservation ID
      */
     public void deleteReservation(int reservationId) {
@@ -171,19 +218,23 @@ public class ReservationRepository {
     }
 
     /**
-     * Check room availability for given dates
-     * @param roomType The room type
-     * @param checkIn Check-in date
-     * @param checkOut Check-out date
+     * Check room availability for given dates, excluding a specific reservation
+     * Used when updating an existing reservation
+     * 
+     * @param roomId    The room ID
+     * @param checkIn   Check-in date
+     * @param checkOut  Check-out date
+     * @param excludeId The reservation ID to exclude from the check
      * @return true if room is available, false otherwise
      */
-    public boolean isRoomAvailable(String roomType, Date checkIn, Date checkOut) {
+    public boolean isRoomAvailableForUpdate(int roomId, Date checkIn, Date checkOut, int excludeId) {
         String sql = "SELECT COUNT(*) FROM reservations " +
-                     "WHERE room_type = ? " +
-                     "AND status NOT IN ('CANCELLED', 'CHECKED_OUT') " +
-                     "AND ((check_in <= ? AND check_out >= ?) " +
-                     "OR (check_in <= ? AND check_out >= ?) " +
-                     "OR (check_in >= ? AND check_out <= ?))";
+                "WHERE room_id = ? " +
+                "AND status = 'OCCUPIED' " +
+                "AND id != ? " +
+                "AND ((check_in <= ? AND check_out >= ?) " +
+                "OR (check_in <= ? AND check_out >= ?) " +
+                "OR (check_in >= ? AND check_out <= ?))";
 
         Connection conn = null;
         PreparedStatement ps = null;
@@ -193,10 +244,57 @@ public class ReservationRepository {
             conn = DatabaseConnection.getConnection();
             ps = conn.prepareStatement(sql);
 
-            ps.setString(1, roomType);
-            ps.setDate(2, checkOut);
+            ps.setInt(1, roomId);
+            ps.setInt(2, excludeId);
             ps.setDate(3, checkOut);
             ps.setDate(4, checkIn);
+            ps.setDate(5, checkOut);
+            ps.setDate(6, checkIn);
+            ps.setDate(7, checkIn);
+            ps.setDate(8, checkOut);
+
+            rs = ps.executeQuery();
+
+            if (rs.next()) {
+                return rs.getInt(1) == 0;
+            }
+            return false;
+
+        } catch (SQLException e) {
+            throw new DatabaseException("Failed to check room availability for update", e);
+        } finally {
+            closeResources(rs, ps, conn);
+        }
+    }
+
+    /**
+     * Check room availability for given dates
+     * 
+     * @param roomId   The room ID
+     * @param checkIn  Check-in date
+     * @param checkOut Check-out date
+     * @return true if room is available, false otherwise
+     */
+    public boolean isRoomAvailable(int roomId, Date checkIn, Date checkOut) {
+        String sql = "SELECT COUNT(*) FROM reservations " +
+                "WHERE room_id = ? " +
+                "AND status = 'OCCUPIED' " +
+                "AND ((check_in <= ? AND check_out >= ?) " +
+                "OR (check_in <= ? AND check_out >= ?) " +
+                "OR (check_in >= ? AND check_out <= ?))";
+
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+
+        try {
+            conn = DatabaseConnection.getConnection();
+            ps = conn.prepareStatement(sql);
+
+            ps.setInt(1, roomId);
+            ps.setDate(2, checkOut);
+            ps.setDate(3, checkIn);
+            ps.setDate(4, checkOut);
             ps.setDate(5, checkIn);
             ps.setDate(6, checkIn);
             ps.setDate(7, checkOut);
@@ -216,6 +314,38 @@ public class ReservationRepository {
     }
 
     /**
+     * Check if reservation exists by ID
+     * 
+     * @param reservationId The reservation ID
+     * @return true if exists, false otherwise
+     */
+    public boolean existsById(int reservationId) {
+        String sql = "SELECT COUNT(*) FROM reservations WHERE id = ?";
+
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+
+        try {
+            conn = DatabaseConnection.getConnection();
+            ps = conn.prepareStatement(sql);
+            ps.setInt(1, reservationId);
+
+            rs = ps.executeQuery();
+
+            if (rs.next()) {
+                return rs.getInt(1) > 0;
+            }
+            return false;
+
+        } catch (SQLException e) {
+            throw new DatabaseException("Failed to check if reservation exists with ID: " + reservationId, e);
+        } finally {
+            closeResources(rs, ps, conn);
+        }
+    }
+
+    /**
      * Map ResultSet to Reservation object
      */
     private Reservation mapResultSetToReservation(ResultSet rs) throws SQLException {
@@ -229,7 +359,7 @@ public class ReservationRepository {
         Reservation reservation = new Reservation();
         reservation.setReservationId(rs.getInt("id"));
         reservation.setGuest(guest);
-        reservation.setRoomType(rs.getString("room_type"));
+        reservation.setRoomId(rs.getInt("room_id"));
         reservation.setCheckInDate(rs.getDate("check_in").toLocalDate());
         reservation.setCheckOutDate(rs.getDate("check_out").toLocalDate());
         reservation.setStatus(rs.getString("status"));

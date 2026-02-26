@@ -76,15 +76,30 @@ public class RoomController implements HttpHandler {
     }
 
     /**
-     * GET /rooms - Get all rooms
+     * GET /rooms - Get all rooms (optionally filtered by status)
+     * Query params: ?status=AVAILABLE (optional)
      */
     private void handleGetAllRooms(HttpExchange exchange) throws IOException {
         try {
             // Authenticate user
             String token = extractAndValidateToken(exchange);
 
-            // Get all rooms
-            List<Room> rooms = roomService.getAllRooms();
+            // Extract status parameter from query string
+            String statusParam = null;
+            String query = exchange.getRequestURI().getQuery();
+            if (query != null && !query.isEmpty()) {
+                String[] params = query.split("&");
+                for (String param : params) {
+                    String[] keyValue = param.split("=");
+                    if (keyValue.length == 2 && "status".equals(keyValue[0])) {
+                        statusParam = java.net.URLDecoder.decode(keyValue[1], "UTF-8");
+                        break;
+                    }
+                }
+            }
+
+            // Get all rooms (optionally filtered by status)
+            List<Room> rooms = roomService.getAllRooms(statusParam);
 
             // Build response
             JsonArray roomsArray = new JsonArray();

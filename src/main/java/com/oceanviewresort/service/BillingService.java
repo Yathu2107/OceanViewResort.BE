@@ -9,38 +9,34 @@ import java.time.temporal.ChronoUnit;
 
 public class BillingService {
 
-    private final BillRepository billRepository = new BillRepository();
-    private final ReservationService reservationService =
-            new ReservationService();
-    private final EmailService emailService = new EmailService();
+        private final BillRepository billRepository = new BillRepository();
+        private final ReservationService reservationService = new ReservationService();
+        private final EmailService emailService = new EmailService();
 
-    public Bill checkoutAndGenerateBill(int reservationId, double roomRate) {
+        public Bill checkoutAndGenerateBill(int reservationId, double roomRate) {
 
-        Reservation reservation =
-                reservationService.getReservation(reservationId);
+                Reservation reservation = reservationService.getReservation(reservationId);
 
-        long nights = ChronoUnit.DAYS.between(
-                reservation.getCheckInDate(),
-                reservation.getCheckOutDate()
-        );
+                long nights = ChronoUnit.DAYS.between(
+                                reservation.getCheckInDate(),
+                                reservation.getCheckOutDate());
 
-        double totalAmount = nights * roomRate;
+                double totalAmount = nights * roomRate;
 
-        Bill bill = new Bill();
-        bill.setReservation(reservation);
-        bill.setNumberOfNights((int) nights);
-        bill.setRoomRatePerNight(roomRate);
-        bill.setTotalAmount(totalAmount);
-        bill.setGeneratedDate(LocalDate.now());
+                Bill bill = new Bill();
+                bill.setReservation(reservation);
+                bill.setNumberOfNights((int) nights);
+                bill.setRoomRatePerNight(roomRate);
+                bill.setTotalAmount(totalAmount);
+                bill.setGeneratedDate(LocalDate.now());
 
-        billRepository.saveBill(bill);
-        reservationService.checkoutReservation(reservationId);
+                billRepository.saveBill(bill);
+                // reservationService.checkoutReservation(reservationId);
 
-        emailService.sendBillEmail(
-                reservation.getGuest().getEmail(),
-                bill
-        );
+                emailService.sendBillEmail(
+                                reservation.getGuest().getEmail(),
+                                bill);
 
-        return bill;
-    }
+                return bill;
+        }
 }

@@ -114,6 +114,22 @@ public class RoomService {
     }
 
     /**
+     * Get all rooms filtered by status
+     * @param status The room status to filter by (AVAILABLE, BOOKED, MAINTENANCE)
+     * @return List of rooms with the specified status
+     */
+    public List<Room> getAllRooms(String status) {
+        if (status != null && !status.trim().isEmpty()) {
+            String statusUpper = status.toUpperCase();
+            if (!statusUpper.equals("AVAILABLE") && !statusUpper.equals("BOOKED") && !statusUpper.equals("MAINTENANCE")) {
+                throw new ValidationException("Invalid status. Must be AVAILABLE, BOOKED, or MAINTENANCE");
+            }
+            return roomRepository.findByStatus(statusUpper);
+        }
+        return roomRepository.findAll();
+    }
+
+    /**
      * Get room by ID
      */
     public Room getRoomById(int roomId) {

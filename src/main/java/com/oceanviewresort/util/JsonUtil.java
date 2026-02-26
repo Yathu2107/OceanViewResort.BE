@@ -1,6 +1,7 @@
 package com.oceanviewresort.util;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.sun.net.httpserver.HttpExchange;
@@ -8,12 +9,22 @@ import com.sun.net.httpserver.HttpExchange;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
 
 public class JsonUtil {
 
-    private static final Gson gson = new Gson();
+    private static final Gson gson = new GsonBuilder()
+            .registerTypeAdapter(LocalDate.class,
+                    (com.google.gson.JsonSerializer<LocalDate>) (src, typeOfSrc, context) -> {
+                        return new com.google.gson.JsonPrimitive(src.toString());
+                    })
+            .registerTypeAdapter(LocalDate.class,
+                    (com.google.gson.JsonDeserializer<LocalDate>) (json, typeOfT, context) -> {
+                        return LocalDate.parse(json.getAsString());
+                    })
+            .create();
 
-    /* PARSE JSON*/
+    /* PARSE JSON */
     public static JsonObject parse(String body) {
         return JsonParser.parseString(body).getAsJsonObject();
     }
@@ -46,7 +57,7 @@ public class JsonUtil {
         }
     }
 
-    /* SEND ERROR RESPONSE*/
+    /* SEND ERROR RESPONSE */
     public static void sendError(HttpExchange exchange, int statusCode, String errorMessage) throws IOException {
         ApiResponse<Object> response = new ApiResponse<>("E", errorMessage, String.valueOf(statusCode), null);
         String json = gson.toJson(response);
@@ -67,6 +78,9 @@ public class JsonUtil {
     }
 
     /* RESPONSE MODELS */
-    private record ErrorResponse(String error) {}
-    private record MessageResponse(String message) {}
+    private record ErrorResponse(String error) {
+    }
+
+    private record MessageResponse(String message) {
+    }
 }

@@ -55,14 +55,16 @@ CREATE TABLE rooms (
 CREATE TABLE reservations (
     id INT PRIMARY KEY AUTO_INCREMENT,
     guest_id INT NOT NULL,
-    room_type VARCHAR(50) NOT NULL,
+    room_id INT NOT NULL,
     check_in DATE NOT NULL,
     check_out DATE NOT NULL,
-    status VARCHAR(20) DEFAULT 'CONFIRMED',
+    status ENUM('OCCUPIED', 'COMPLETED', 'CANCELLED') DEFAULT 'OCCUPIED',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (guest_id) REFERENCES guests(id) ON DELETE CASCADE,
+    FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE,
     INDEX idx_guest_id (guest_id),
+    INDEX idx_room_id (room_id),
     INDEX idx_status (status),
     INDEX idx_check_in (check_in),
     INDEX idx_check_out (check_out)
@@ -113,10 +115,10 @@ INSERT INTO guests (name, address, contact_number, email) VALUES
 ('Robert Johnson', '789 Pine Rd, Chicago', '+1-555-0103', 'robert.j@email.com');
 
 -- Insert sample reservations for testing
-INSERT INTO reservations (guest_id, room_type, check_in, check_out, status) VALUES
-(1, 'DELUXE', '2026-03-01', '2026-03-05', 'CONFIRMED'),
-(2, 'SUITE', '2026-03-10', '2026-03-15', 'CONFIRMED'),
-(3, 'STANDARD', '2026-03-20', '2026-03-23', 'CONFIRMED');
+INSERT INTO reservations (guest_id, room_id, check_in, check_out, status) VALUES
+(1, 1, '2026-03-01', '2026-03-05', 'OCCUPIED'),
+(2, 3, '2026-03-10', '2026-03-15', 'OCCUPIED'),
+(3, 5, '2026-03-20', '2026-03-23', 'COMPLETED');
 
 -- Insert sample bills for testing
 INSERT INTO bills (reservation_id, nights, rate_per_night, total_amount, generated_date, is_paid) VALUES

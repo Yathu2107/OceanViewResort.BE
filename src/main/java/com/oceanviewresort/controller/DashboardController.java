@@ -4,6 +4,7 @@ import com.oceanviewresort.exception.UnauthorizedException;
 import com.oceanviewresort.service.DashboardService;
 import com.oceanviewresort.util.JsonUtil;
 import com.oceanviewresort.util.JwtUtil;
+import com.oceanviewresort.util.TokenBlacklist;
 import com.google.gson.JsonObject;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
@@ -32,6 +33,11 @@ public class DashboardController implements HttpHandler {
         }
 
         String token = authHeader.substring(7);
+
+        // Check if token is blacklisted (user logged out)
+        if (TokenBlacklist.isTokenBlacklisted(token)) {
+            throw new UnauthorizedException("Session expired. Please login again");
+        }
 
         if (!JwtUtil.validateToken(token)) {
             throw new UnauthorizedException("Session expired. Please login again");
@@ -87,11 +93,11 @@ public class DashboardController implements HttpHandler {
                 Map<String, Double> percentages = (Map<String, Double>) statistics.get("percentages");
                 JsonObject percentagesJson = new JsonObject();
                 percentagesJson.addProperty("available_percentage",
-                    String.format("%.2f", percentages.get("available_percentage")));
+                        String.format("%.2f", percentages.get("available_percentage")));
                 percentagesJson.addProperty("booked_percentage",
-                    String.format("%.2f", percentages.get("booked_percentage")));
+                        String.format("%.2f", percentages.get("booked_percentage")));
                 percentagesJson.addProperty("maintenance_percentage",
-                    String.format("%.2f", percentages.get("maintenance_percentage")));
+                        String.format("%.2f", percentages.get("maintenance_percentage")));
                 response.add("percentages", percentagesJson);
             }
 

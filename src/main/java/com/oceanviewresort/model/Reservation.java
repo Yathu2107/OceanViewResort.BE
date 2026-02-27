@@ -1,29 +1,33 @@
 package com.oceanviewresort.model;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Reservation entity representing guest reservations
- * Uses room_id instead of room_type for better relationship management
- * Status values: OCCUPIED, COMPLETED
+ * Now supports multiple rooms per reservation via room_ids
+ * One guest can reserve multiple rooms in a single reservation
+ * Status values: OCCUPIED, COMPLETED, CANCELLED
  */
 public class Reservation {
 
     private int reservationId;
     private Guest guest;
-    private int roomId;
+    private List<Integer> roomIds; // Multiple rooms per reservation
     private LocalDate checkInDate;
     private LocalDate checkOutDate;
-    private String status; // OCCUPIED, COMPLETED
+    private String status; // OCCUPIED, COMPLETED, CANCELLED
 
     public Reservation() {
+        this.roomIds = new ArrayList<>();
     }
 
-    public Reservation(int reservationId, Guest guest, int roomId,
+    public Reservation(int reservationId, Guest guest, List<Integer> roomIds,
             LocalDate checkInDate, LocalDate checkOutDate, String status) {
         this.reservationId = reservationId;
         this.guest = guest;
-        this.roomId = roomId;
+        this.roomIds = roomIds != null ? roomIds : new ArrayList<>();
         this.checkInDate = checkInDate;
         this.checkOutDate = checkOutDate;
         this.status = status;
@@ -45,12 +49,39 @@ public class Reservation {
         this.guest = guest;
     }
 
-    public int getRoomId() {
-        return roomId;
+    public List<Integer> getRoomIds() {
+        return roomIds;
     }
 
+    public void setRoomIds(List<Integer> roomIds) {
+        this.roomIds = roomIds != null ? roomIds : new ArrayList<>();
+    }
+
+    public void addRoomId(int roomId) {
+        if (this.roomIds == null) {
+            this.roomIds = new ArrayList<>();
+        }
+        this.roomIds.add(roomId);
+    }
+
+    /**
+     * Legacy method for backward compatibility
+     * Returns first room ID if available
+     */
+    public int getRoomId() {
+        return (this.roomIds != null && !this.roomIds.isEmpty()) ? this.roomIds.get(0) : 0;
+    }
+
+    /**
+     * Legacy method for backward compatibility
+     * Sets single room as first room in list
+     */
     public void setRoomId(int roomId) {
-        this.roomId = roomId;
+        if (this.roomIds == null) {
+            this.roomIds = new ArrayList<>();
+        }
+        this.roomIds.clear();
+        this.roomIds.add(roomId);
     }
 
     public LocalDate getCheckInDate() {

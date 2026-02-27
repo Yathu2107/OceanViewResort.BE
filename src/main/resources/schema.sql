@@ -3,6 +3,7 @@
 
 -- Drop tables if they exist (for clean installation)
 DROP TABLE IF EXISTS bills;
+DROP TABLE IF EXISTS reservation_rooms;
 DROP TABLE IF EXISTS reservations;
 DROP TABLE IF EXISTS rooms;
 DROP TABLE IF EXISTS guests;
@@ -51,23 +52,32 @@ CREATE TABLE rooms (
     INDEX idx_status (status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Reservations Table
+-- Reservations Table (now without room_id - rooms linked via junction table)
 CREATE TABLE reservations (
     id INT PRIMARY KEY AUTO_INCREMENT,
     guest_id INT NOT NULL,
-    room_id INT NOT NULL,
     check_in DATE NOT NULL,
     check_out DATE NOT NULL,
     status ENUM('OCCUPIED', 'COMPLETED', 'CANCELLED') DEFAULT 'OCCUPIED',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (guest_id) REFERENCES guests(id) ON DELETE CASCADE,
-    FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE,
     INDEX idx_guest_id (guest_id),
-    INDEX idx_room_id (room_id),
     INDEX idx_status (status),
     INDEX idx_check_in (check_in),
     INDEX idx_check_out (check_out)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Reservation Rooms Junction Table (Many-to-Many relationship)
+-- One reservation can have multiple rooms, one room can be in multiple reservations
+CREATE TABLE reservation_rooms (
+    reservation_id INT NOT NULL,
+    room_id INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (reservation_id, room_id),
+    FOREIGN KEY (reservation_id) REFERENCES reservations(id) ON DELETE CASCADE,
+    FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE,
+    INDEX idx_room_id (room_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Bills Table
@@ -115,10 +125,24 @@ INSERT INTO guests (name, address, contact_number, email) VALUES
 ('Robert Johnson', '789 Pine Rd, Chicago', '+1-555-0103', 'robert.j@email.com');
 
 -- Insert sample reservations for testing
-INSERT INTO reservations (guest_id, room_id, check_in, check_out, status) VALUES
-(1, 1, '2026-03-01', '2026-03-05', 'OCCUPIED'),
-(2, 3, '2026-03-10', '2026-03-15', 'OCCUPIED'),
-(3, 5, '2026-03-20', '2026-03-23', 'COMPLETED');
+INSERT INTO reservations (guest_id, check_in, check_out, status) VALUES
+(1, '2026-03-01', '2026-03-05', 'OCCUPIED'),
+(2, '2026-03-10', '2026-03-15', 'OCCUPIED'),
+(3, '2026-03-20', '2026-03-23', 'COMPLETED');
+
+-- Insert room assignments for reservations (junction table)
+-- Reservation 1 (Guest John Doe) has 2 rooms
+INSERT INTO reservation_rooms (reservation_id, room_id) VALUES
+(1, 1),
+(1, 2);
+
+-- Reservation 2 (Guest Jane Smith) has 1 room
+INSERT INTO reservation_rooms (reservation_id, room_id) VALUES
+(2, 3);
+
+-- Reservation 3 (Guest Robert Johnson) has 1 room
+INSERT INTO reservation_rooms (reservation_id, room_id) VALUES
+(3, 5);
 
 -- Insert sample bills for testing
 INSERT INTO bills (reservation_id, nights, rate_per_night, total_amount, generated_date, is_paid) VALUES

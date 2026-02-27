@@ -94,11 +94,22 @@ public class EmailService {
                     "        .details-table { width: 100%; margin: 20px 0; border-collapse: collapse; }\n" +
                     "        .details-table td { padding: 12px; border-bottom: 1px solid #eee; }\n" +
                     "        .details-table td:first-child { font-weight: 600; color: #667eea; width: 40%; }\n" +
+                    "        .room-table { width: 100%; margin: 10px 0; border-collapse: collapse; }\n" +
+                    "        .room-table th { background-color: #667eea; color: white; padding: 10px; text-align: left; font-weight: 600; font-size: 13px; }\n"
+                    +
+                    "        .room-table td { padding: 10px; border-bottom: 1px solid #eee; font-size: 13px; }\n" +
+                    "        .room-table tr:last-child td { border-bottom: none; }\n" +
                     "        .amount-box { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 8px; text-align: center; margin: 20px 0; }\n"
                     +
                     "        .amount-box .label { font-size: 14px; opacity: 0.9; }\n" +
                     "        .amount-box .value { font-size: 32px; font-weight: bold; }\n" +
                     "        .footer { text-align: center; padding: 20px; color: #999; font-size: 12px; border-top: 1px solid #eee; margin-top: 20px; }\n"
+                    +
+                    "        .reservation-badge { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 20px; border-radius: 8px; text-align: center; margin-bottom: 20px; }\n"
+                    +
+                    "        .reservation-badge .label { font-size: 12px; opacity: 0.9; text-transform: uppercase; letter-spacing: 1px; }\n"
+                    +
+                    "        .reservation-badge .value { font-size: 24px; font-weight: bold; margin-top: 5px; }\n"
                     +
                     "        .footer a { color: #667eea; text-decoration: none; }\n" +
                     "    </style>\n" +
@@ -110,16 +121,20 @@ public class EmailService {
                     "            <p>Billing Details</p>\n" +
                     "        </div>\n" +
                     "        <div class=\"content\">\n" +
+                    "            <div class=\"reservation-badge\">\n" +
+                    "                <div class=\"label\">Reservation ID</div>\n" +
+                    "                <div class=\"value\">#" + bill.getReservation().getReservationId() + "</div>\n" +
+                    "            </div>\n" +
                     "            <p>Thank you for staying with Ocean View Resort!</p>\n" +
-                    "            <table class=\"details-table\">\n" +
-                    "                <tr><td>Reservation ID:</td><td>" + bill.getReservation().getReservationId()
-                    + "</td></tr>\n" +
-                    "                <tr><td>Number of Nights:</td><td>" + bill.getNumberOfNights() + "</td></tr>\n" +
-                    "                <tr><td>Rate per Night:</td><td>$" + bill.getRoomRatePerNight() + "</td></tr>\n" +
+                    "            <p style=\"font-weight: 600; color: #667eea; margin-top: 20px; margin-bottom: 10px;\">Room Details:</p>\n"
+                    +
+                    "            <table class=\"room-table\">\n" +
+                    "                <tr><th>Room No</th><th>Price/Night</th><th>Nights</th><th>Subtotal</th></tr>\n" +
+                    buildRoomDetailsHtml(bill) +
                     "            </table>\n" +
                     "            <div class=\"amount-box\">\n" +
                     "                <div class=\"label\">Total Amount Due</div>\n" +
-                    "                <div class=\"value\">$" + bill.getTotalAmount() + "</div>\n" +
+                    "                <div class=\"value\">Rs." + bill.getTotalAmount() + "</div>\n" +
                     "            </div>\n" +
                     "            <p style=\"text-align: center; color: #999; margin-top: 20px;\">If you have any questions, please contact our support team.</p>\n"
                     +
@@ -264,7 +279,10 @@ public class EmailService {
                     + "</td></tr>\n" +
                     "                    <tr><td>Contact Number:</td><td>" + reservation.getGuest().getContactNumber()
                     + "</td></tr>\n" +
-                    "                    <tr><td>Room Number:</td><td>" + reservation.getRoomId() + "</td></tr>\n" +
+                    "                    <tr><td>Room Numbers:</td><td>" + formatRoomNumbers(reservation.getRoomIds())
+                    + "</td></tr>\n" +
+                    "                    <tr><td>Number of Rooms:</td><td>" + reservation.getRoomIds().size()
+                    + "</td></tr>\n" +
                     "                </table>\n" +
                     "            </div>\n" +
                     "            \n" +
@@ -318,5 +336,40 @@ public class EmailService {
             System.err.println("[EMAIL ERROR] Failed to set sender name for email");
             System.err.println("[EMAIL ERROR] Error message: " + e.getMessage());
         }
+    }
+
+    /**
+     * Format room numbers for email display
+     * Converts List<Integer> to comma-separated string (e.g., "101, 102, 103")
+     */
+    private static String formatRoomNumbers(java.util.List<Integer> roomIds) {
+        if (roomIds == null || roomIds.isEmpty()) {
+            return "N/A";
+        }
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < roomIds.size(); i++) {
+            if (i > 0)
+                sb.append(", ");
+            sb.append(roomIds.get(i));
+        }
+        return sb.toString();
+    }
+
+    /**
+     * Build HTML table rows for room details in billing email
+     */
+    private static String buildRoomDetailsHtml(Bill bill) {
+        if (bill.getRoomDetails() == null || bill.getRoomDetails().isEmpty()) {
+            return "";
+        }
+        StringBuilder html = new StringBuilder();
+        for (Bill.RoomDetail room : bill.getRoomDetails()) {
+            html.append("                <tr><td>").append(room.getRoomNumber())
+                    .append("</td><td>Rs.").append(room.getPricePerNight())
+                    .append("</td><td>").append(bill.getNumberOfNights())
+                    .append("</td><td>Rs.").append(room.getTotalForRoom())
+                    .append("</td></tr>\n");
+        }
+        return html.toString();
     }
 }

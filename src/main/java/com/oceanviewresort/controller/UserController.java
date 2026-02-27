@@ -7,6 +7,7 @@ import com.oceanviewresort.exception.ValidationException;
 import com.oceanviewresort.service.UserService;
 import com.oceanviewresort.util.JsonUtil;
 import com.oceanviewresort.util.JwtUtil;
+import com.oceanviewresort.util.TokenBlacklist;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
 import com.sun.net.httpserver.HttpExchange;
@@ -21,6 +22,7 @@ public class UserController implements HttpHandler {
 
     /**
      * Extract and validate JWT token from the Authorization header
+     * 
      * @return the token string
      * @throws UnauthorizedException if a token is missing or invalid
      */
@@ -38,6 +40,11 @@ public class UserController implements HttpHandler {
 
         String token = authHeader.substring(7);
 
+        // Check if token is blacklisted (user logged out)
+        if (TokenBlacklist.isTokenBlacklisted(token)) {
+            throw new UnauthorizedException("Session expired. Please login again");
+        }
+
         if (!JwtUtil.validateToken(token)) {
             throw new UnauthorizedException("Session expired. Please login again");
         }
@@ -47,6 +54,7 @@ public class UserController implements HttpHandler {
 
     /**
      * Check if a user has a MANAGER role
+     * 
      * @throws ForbiddenException if the user is not a MANAGER
      */
     private void requireManagerRole(String token) {
@@ -64,6 +72,8 @@ public class UserController implements HttpHandler {
 
         if (path.endsWith("/register")) {
             handleRegister(exchange);
+        } else if (path.endsWith("/logout")) {
+            handleLogout(exchange);
         } else if (path.endsWith("/me")) {
             handleGetLoggedUserDetails(exchange);
         } else if (path.matches(".*/user/[a-f0-9-]+$")) {
@@ -113,6 +123,43 @@ public class UserController implements HttpHandler {
             System.err.println("Error Message: " + e.getMessage());
             e.printStackTrace();
             JsonUtil.sendError(exchange, 500, "Something went wrong, please try again");
+        }
+    }
+
+    /**
+     * POST /user/logout - Logout user
+     * Invalidates JWT token and clears session
+     */
+    private void handleLogout(HttpExchange exchange) throws IOException {
+
+        if (!exchange.getRequestMethod().equalsIgnoreCase("POST")) {
+            JsonUtil.sendError(exchange, 405, "Method not allowed");
+            return;
+        }
+
+        try {
+            // Extract and validate JWT token
+            String token = extractAndValidateToken(exchange);
+            String username = JwtUtil.getUsernameFromToken(token);
+
+            // Add token to blacklist to prevent further use
+            TokenBlacklist.revokeToken(token);
+            System.out.println("[AUTH] User '" + username + "' logged out successfully. Token revoked.");
+
+            // Build response
+            JsonObject response = new JsonObject();
+            response.addProperty("username", username);
+            response.addProperty("message", "Logged out successfully");
+
+            JsonUtil.sendJsonWithMessage(exchange, "Logout successful", response);
+
+        } catch (UnauthorizedException e) {
+            System.err.println("Unauthorized logout: " + e.getMessage());
+            JsonUtil.sendError(exchange, 401, e.getMessage());
+        } catch (Exception e) {
+            System.err.println("Error during logout: " + e.getMessage());
+            e.printStackTrace();
+            JsonUtil.sendError(exchange, 500, "Logout failed");
         }
     }
 

@@ -17,14 +17,16 @@ import java.util.List;
 public class ReservationRepository {
 
     /**
-     * Save a new reservation
+     * Save a new reservation (without rooms)
+     * Rooms are added separately via addRoomsToReservation()
      * 
-     * @param reservation The reservation to save
+     * @param reservation The reservation to save (must have roomIds populated for
+     *                    this to work with new schema)
      * @return The ID of the created reservation
      */
     public int saveReservation(Reservation reservation) {
-        String sql = "INSERT INTO reservations (guest_id, room_id, check_in, check_out, status) " +
-                "VALUES (?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO reservations (guest_id, check_in, check_out, status) " +
+                "VALUES (?, ?, ?, ?)";
 
         Connection conn = null;
         PreparedStatement ps = null;
@@ -35,10 +37,9 @@ public class ReservationRepository {
             ps = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS);
 
             ps.setInt(1, reservation.getGuest().getId());
-            ps.setInt(2, reservation.getRoomId());
-            ps.setDate(3, Date.valueOf(reservation.getCheckInDate()));
-            ps.setDate(4, Date.valueOf(reservation.getCheckOutDate()));
-            ps.setString(5, reservation.getStatus());
+            ps.setDate(2, Date.valueOf(reservation.getCheckInDate()));
+            ps.setDate(3, Date.valueOf(reservation.getCheckOutDate()));
+            ps.setString(4, reservation.getStatus());
 
             int affectedRows = ps.executeUpdate();
 
@@ -48,7 +49,14 @@ public class ReservationRepository {
 
             rs = ps.getGeneratedKeys();
             if (rs.next()) {
-                return rs.getInt(1);
+                int reservationId = rs.getInt(1);
+
+                // Add rooms to the reservation using junction table
+                if (reservation.getRoomIds() != null && !reservation.getRoomIds().isEmpty()) {
+                    addRoomsToReservation(reservationId, reservation.getRoomIds());
+                }
+
+                return reservationId;
             } else {
                 throw new DatabaseException("Creating reservation failed, no ID obtained");
             }
@@ -61,13 +69,13 @@ public class ReservationRepository {
     }
 
     /**
-     * Find reservation by ID with guest details
+     * Find reservation by ID with guest details and all associated rooms
      * 
      * @param reservationId The reservation ID
      * @return Reservation object or null if not found
      */
     public Reservation findById(int reservationId) {
-        String sql = "SELECT r.id, r.guest_id, r.room_id, r.check_in, r.check_out, r.status, " +
+        String sql = "SELECT r.id, r.guest_id, r.check_in, r.check_out, r.status, " +
                 "g.name, g.address, g.contact_number, g.email " +
                 "FROM reservations r " +
                 "JOIN guests g ON r.guest_id = g.id " +
@@ -88,7 +96,13 @@ public class ReservationRepository {
 
             if (rs.next()) {
                 Reservation reservation = mapResultSetToReservation(rs);
-                System.out.println("[DB QUERY] Retrieved guest email: " + rs.getString("email"));
+
+                // Fetch all rooms for this reservation
+                List<Integer> roomIds = getRoomsByReservationId(reservationId);
+                reservation.setRoomIds(roomIds);
+
+                System.out.println("[DB QUERY] Retrieved guest email: " + rs.getString("email") +
+                        ", Rooms: " + roomIds.size());
                 return reservation;
             }
             System.out.println("[DB QUERY] No reservation found with ID: " + reservationId);
@@ -104,13 +118,13 @@ public class ReservationRepository {
     }
 
     /**
-     * Find all reservations by guest ID
+     * Find all reservations by guest ID with rooms
      * 
      * @param guestId The guest ID
      * @return List of reservations
      */
     public List<Reservation> findByGuestId(int guestId) {
-        String sql = "SELECT r.id, r.guest_id, r.room_id, r.check_in, r.check_out, r.status, " +
+        String sql = "SELECT r.id, r.guest_id, r.check_in, r.check_out, r.status, " +
                 "g.name, g.address, g.contact_number, g.email " +
                 "FROM reservations r " +
                 "JOIN guests g ON r.guest_id = g.id " +
@@ -130,7 +144,11 @@ public class ReservationRepository {
             rs = ps.executeQuery();
 
             while (rs.next()) {
-                reservations.add(mapResultSetToReservation(rs));
+                Reservation reservation = mapResultSetToReservation(rs);
+                // Fetch rooms for each reservation
+                List<Integer> roomIds = getRoomsByReservationId(reservation.getReservationId());
+                reservation.setRoomIds(roomIds);
+                reservations.add(reservation);
             }
 
             return reservations;
@@ -175,12 +193,13 @@ public class ReservationRepository {
     }
 
     /**
-     * Update reservation details (room_id, check_in, check_out dates, and status)
+     * Update reservation details (check_in, check_out dates, and status)
+     * Rooms are updated separately via updateRoomsForReservation()
      * 
      * @param reservation The updated reservation object
      */
     public void updateReservation(Reservation reservation) {
-        String sql = "UPDATE reservations SET room_id = ?, check_in = ?, check_out = ?, status = ? WHERE id = ?";
+        String sql = "UPDATE reservations SET check_in = ?, check_out = ?, status = ? WHERE id = ?";
 
         Connection conn = null;
         PreparedStatement ps = null;
@@ -189,16 +208,20 @@ public class ReservationRepository {
             conn = DatabaseConnection.getConnection();
             ps = conn.prepareStatement(sql);
 
-            ps.setInt(1, reservation.getRoomId());
-            ps.setDate(2, Date.valueOf(reservation.getCheckInDate()));
-            ps.setDate(3, Date.valueOf(reservation.getCheckOutDate()));
-            ps.setString(4, reservation.getStatus());
-            ps.setInt(5, reservation.getReservationId());
+            ps.setDate(1, Date.valueOf(reservation.getCheckInDate()));
+            ps.setDate(2, Date.valueOf(reservation.getCheckOutDate()));
+            ps.setString(3, reservation.getStatus());
+            ps.setInt(4, reservation.getReservationId());
 
             int affectedRows = ps.executeUpdate();
 
             if (affectedRows == 0) {
                 throw new DatabaseException("Reservation not found with ID: " + reservation.getReservationId());
+            }
+
+            // Update rooms if provided
+            if (reservation.getRoomIds() != null && !reservation.getRoomIds().isEmpty()) {
+                updateRoomsForReservation(reservation.getReservationId(), reservation.getRoomIds());
             }
 
         } catch (SQLException e) {
@@ -228,13 +251,14 @@ public class ReservationRepository {
      * @return true if room is available, false otherwise
      */
     public boolean isRoomAvailableForUpdate(int roomId, Date checkIn, Date checkOut, int excludeId) {
-        String sql = "SELECT COUNT(*) FROM reservations " +
-                "WHERE room_id = ? " +
-                "AND status = 'OCCUPIED' " +
-                "AND id != ? " +
-                "AND ((check_in <= ? AND check_out >= ?) " +
-                "OR (check_in <= ? AND check_out >= ?) " +
-                "OR (check_in >= ? AND check_out <= ?))";
+        String sql = "SELECT COUNT(*) FROM reservations r " +
+                "JOIN reservation_rooms rr ON r.id = rr.reservation_id " +
+                "WHERE rr.room_id = ? " +
+                "AND r.status = 'OCCUPIED' " +
+                "AND r.id != ? " +
+                "AND ((r.check_in <= ? AND r.check_out >= ?) " +
+                "OR (r.check_in <= ? AND r.check_out >= ?) " +
+                "OR (r.check_in >= ? AND r.check_out <= ?))";
 
         Connection conn = null;
         PreparedStatement ps = null;
@@ -276,12 +300,13 @@ public class ReservationRepository {
      * @return true if room is available, false otherwise
      */
     public boolean isRoomAvailable(int roomId, Date checkIn, Date checkOut) {
-        String sql = "SELECT COUNT(*) FROM reservations " +
-                "WHERE room_id = ? " +
-                "AND status = 'OCCUPIED' " +
-                "AND ((check_in <= ? AND check_out >= ?) " +
-                "OR (check_in <= ? AND check_out >= ?) " +
-                "OR (check_in >= ? AND check_out <= ?))";
+        String sql = "SELECT COUNT(*) FROM reservations r " +
+                "JOIN reservation_rooms rr ON r.id = rr.reservation_id " +
+                "WHERE rr.room_id = ? " +
+                "AND r.status = 'OCCUPIED' " +
+                "AND ((r.check_in <= ? AND r.check_out >= ?) " +
+                "OR (r.check_in <= ? AND r.check_out >= ?) " +
+                "OR (r.check_in >= ? AND r.check_out <= ?))";
 
         Connection conn = null;
         PreparedStatement ps = null;
@@ -347,6 +372,8 @@ public class ReservationRepository {
 
     /**
      * Map ResultSet to Reservation object
+     * Note: Doesn't include roomIds - fetch separately using
+     * getRoomsByReservationId()
      */
     private Reservation mapResultSetToReservation(ResultSet rs) throws SQLException {
         Guest guest = new Guest();
@@ -359,12 +386,109 @@ public class ReservationRepository {
         Reservation reservation = new Reservation();
         reservation.setReservationId(rs.getInt("id"));
         reservation.setGuest(guest);
-        reservation.setRoomId(rs.getInt("room_id"));
         reservation.setCheckInDate(rs.getDate("check_in").toLocalDate());
         reservation.setCheckOutDate(rs.getDate("check_out").toLocalDate());
         reservation.setStatus(rs.getString("status"));
+        // roomIds are fetched separately in findById()
 
         return reservation;
+    }
+
+    /**
+     * Add rooms to a reservation (insert into junction table)
+     * 
+     * @param reservationId The reservation ID
+     * @param roomIds       List of room IDs to add
+     */
+    public void addRoomsToReservation(int reservationId, List<Integer> roomIds) {
+        String sql = "INSERT INTO reservation_rooms (reservation_id, room_id) VALUES (?, ?)";
+
+        Connection conn = null;
+        PreparedStatement ps = null;
+
+        try {
+            conn = DatabaseConnection.getConnection();
+            ps = conn.prepareStatement(sql);
+
+            for (Integer roomId : roomIds) {
+                ps.setInt(1, reservationId);
+                ps.setInt(2, roomId);
+                ps.addBatch();
+            }
+
+            int[] affectedRows = ps.executeBatch();
+            System.out.println("[DB QUERY] Added " + affectedRows.length + " rooms to reservation " + reservationId);
+
+        } catch (SQLException e) {
+            throw new DatabaseException("Failed to add rooms to reservation", e);
+        } finally {
+            closeResources(null, ps, conn);
+        }
+    }
+
+    /**
+     * Get all room IDs for a specific reservation
+     * 
+     * @param reservationId The reservation ID
+     * @return List of room IDs
+     */
+    public List<Integer> getRoomsByReservationId(int reservationId) {
+        String sql = "SELECT room_id FROM reservation_rooms WHERE reservation_id = ? ORDER BY room_id";
+
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        List<Integer> roomIds = new ArrayList<>();
+
+        try {
+            conn = DatabaseConnection.getConnection();
+            ps = conn.prepareStatement(sql);
+            ps.setInt(1, reservationId);
+
+            rs = ps.executeQuery();
+
+            while (rs.next()) {
+                roomIds.add(rs.getInt("room_id"));
+            }
+
+            return roomIds;
+
+        } catch (SQLException e) {
+            throw new DatabaseException("Failed to fetch rooms for reservation ID: " + reservationId, e);
+        } finally {
+            closeResources(rs, ps, conn);
+        }
+    }
+
+    /**
+     * Update rooms for a reservation (remove old, add new)
+     * 
+     * @param reservationId The reservation ID
+     * @param newRoomIds    List of new room IDs
+     */
+    public void updateRoomsForReservation(int reservationId, List<Integer> newRoomIds) {
+        // First, remove all existing rooms
+        String deleteSql = "DELETE FROM reservation_rooms WHERE reservation_id = ?";
+
+        Connection conn = null;
+        PreparedStatement deletePs = null;
+
+        try {
+            conn = DatabaseConnection.getConnection();
+            deletePs = conn.prepareStatement(deleteSql);
+            deletePs.setInt(1, reservationId);
+            deletePs.executeUpdate();
+
+            // Then add new rooms
+            if (newRoomIds != null && !newRoomIds.isEmpty()) {
+                addRoomsToReservation(reservationId, newRoomIds);
+            }
+
+        } catch (SQLException e) {
+            throw new DatabaseException("Failed to update rooms for reservation", e);
+        } finally {
+            closeResources(null, deletePs, conn);
+        }
     }
 
     /**

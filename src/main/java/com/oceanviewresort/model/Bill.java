@@ -1,6 +1,7 @@
 package com.oceanviewresort.model;
 
 import java.time.LocalDate;
+import java.util.List;
 
 public class Bill {
 
@@ -10,12 +11,60 @@ public class Bill {
     private double roomRatePerNight;
     private double totalAmount;
     private LocalDate generatedDate;
+    private List<RoomDetail> roomDetails; // Room-wise breakdown
+
+    // Inner class for room details
+    public static class RoomDetail {
+        private int roomId;
+        private String roomNumber;
+        private double pricePerNight;
+        private double totalForRoom; // nights × pricePerNight
+
+        public RoomDetail(int roomId, String roomNumber, double pricePerNight, double totalForRoom) {
+            this.roomId = roomId;
+            this.roomNumber = roomNumber;
+            this.pricePerNight = pricePerNight;
+            this.totalForRoom = totalForRoom;
+        }
+
+        public int getRoomId() {
+            return roomId;
+        }
+
+        public void setRoomId(int roomId) {
+            this.roomId = roomId;
+        }
+
+        public String getRoomNumber() {
+            return roomNumber;
+        }
+
+        public void setRoomNumber(String roomNumber) {
+            this.roomNumber = roomNumber;
+        }
+
+        public double getPricePerNight() {
+            return pricePerNight;
+        }
+
+        public void setPricePerNight(double pricePerNight) {
+            this.pricePerNight = pricePerNight;
+        }
+
+        public double getTotalForRoom() {
+            return totalForRoom;
+        }
+
+        public void setTotalForRoom(double totalForRoom) {
+            this.totalForRoom = totalForRoom;
+        }
+    }
 
     public Bill() {
     }
 
     public Bill(int billId, Reservation reservation, int numberOfNights,
-                double roomRatePerNight, double totalAmount, LocalDate generatedDate) {
+            double roomRatePerNight, double totalAmount, LocalDate generatedDate) {
         this.billId = billId;
         this.reservation = reservation;
         this.numberOfNights = numberOfNights;
@@ -70,5 +119,13 @@ public class Bill {
 
     public void setGeneratedDate(LocalDate generatedDate) {
         this.generatedDate = generatedDate;
+    }
+
+    public List<RoomDetail> getRoomDetails() {
+        return roomDetails;
+    }
+
+    public void setRoomDetails(List<RoomDetail> roomDetails) {
+        this.roomDetails = roomDetails;
     }
 }

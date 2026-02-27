@@ -6,6 +6,7 @@ import com.oceanviewresort.model.Guest;
 import com.oceanviewresort.service.GuestService;
 import com.oceanviewresort.util.JsonUtil;
 import com.oceanviewresort.util.JwtUtil;
+import com.oceanviewresort.util.TokenBlacklist;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
@@ -35,6 +36,11 @@ public class GuestController implements HttpHandler {
         }
 
         String token = authHeader.substring(7);
+
+        // Check if token is blacklisted (user logged out)
+        if (TokenBlacklist.isTokenBlacklisted(token)) {
+            throw new UnauthorizedException("Session expired. Please login again");
+        }
 
         if (!JwtUtil.validateToken(token)) {
             throw new UnauthorizedException("Session expired. Please login again");

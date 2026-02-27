@@ -31,7 +31,7 @@ public class BillingService {
                 bill.setGeneratedDate(LocalDate.now());
 
                 billRepository.saveBill(bill);
-                // reservationService.checkoutReservation(reservationId);
+                reservationService.checkoutReservation(reservationId);
 
                 emailService.sendBillEmail(
                                 reservation.getGuest().getEmail(),

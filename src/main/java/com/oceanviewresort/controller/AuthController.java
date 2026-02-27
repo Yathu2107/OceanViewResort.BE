@@ -35,9 +35,8 @@ public class AuthController implements HttpHandler {
             // Authenticate user
             String token = userService.login(username, password);
 
-            // Get user details to include the name in the response
-            com.oceanviewresort.repository.UserRepository userRepo = new com.oceanviewresort.repository.UserRepository();
-            com.oceanviewresort.model.User user = userRepo.findByUsername(username);
+            // Get user details via service layer (no new repository instantiation needed)
+            com.oceanviewresort.model.User user = userService.getUserByUsername(username);
 
             // Build response with token and user details
             JsonObject response = new JsonObject();

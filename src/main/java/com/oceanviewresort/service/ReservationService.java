@@ -352,6 +352,17 @@ public class ReservationService {
     }
 
     /**
+     * Mark reservation as COMPLETED on checkout
+     * Updates reservation status to COMPLETED in the database
+     */
+    public void checkoutReservation(int reservationId) {
+        if (!reservationRepository.existsById(reservationId)) {
+            throw new ValidationException("Reservation not found with ID: " + reservationId);
+        }
+        reservationRepository.updateStatus(reservationId, "COMPLETED");
+    }
+
+    /**
      * Cancel/delete reservation (marks as CANCELLED)
      * Note: This only updates the status to CANCELLED, does not change other fields
      */

@@ -1,0 +1,18 @@
+# Database Configuration
+db.url=jdbc:mysql://localhost:3306/ocean_view_resort?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+db.username=your_db_username
+db.password=your_db_password
+
+# Email Configuration (SMTP)
+email.smtp.host=smtp.gmail.com
+email.smtp.port=587
+email.username=your_email@gmail.com
+email.password=your_app_password
+email.from=your_from_email@gmail.com
+email.from.name=Ocean View Resort
+
+# JWT Configuration
+# IMPORTANT: Replace with a strong random 256-bit (32+ character) secret key.
+# Never commit the real key to source control.
+jwt.secret=REPLACE_WITH_A_STRONG_RANDOM_256BIT_SECRET_KEY
+jwt.expiration=86400000

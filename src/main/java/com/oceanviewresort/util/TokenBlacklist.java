@@ -11,7 +11,6 @@ import java.util.Set;
 public class TokenBlacklist {
 
     private static final Set<String> blacklistedTokens = new HashSet<>();
-    private static final long TOKEN_EXPIRY_TIME = 86400000; // 24 hours in milliseconds
 
     /**
      * Add token to blacklist (when user logs out)

@@ -103,7 +103,7 @@ public class RoomController implements HttpHandler {
     private void handleGetAllRooms(HttpExchange exchange) throws IOException {
         try {
             // Authenticate user
-            String token = extractAndValidateToken(exchange);
+            extractAndValidateToken(exchange);
 
             // Extract query parameters
             String statusParam = null;
@@ -200,7 +200,7 @@ public class RoomController implements HttpHandler {
     private void handleGetRoomById(HttpExchange exchange) throws IOException {
         try {
             // Authenticate user
-            String token = extractAndValidateToken(exchange);
+            extractAndValidateToken(exchange);
 
             // Extract room ID from a path
             String path = exchange.getRequestURI().getPath();

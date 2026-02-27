@@ -78,9 +78,6 @@ public class JsonUtil {
     }
 
     /* RESPONSE MODELS */
-    private record ErrorResponse(String error) {
-    }
-
     private record MessageResponse(String message) {
     }
 }

@@ -66,7 +66,7 @@ public class DashboardController implements HttpHandler {
     private void handleGetStatistics(HttpExchange exchange) throws IOException {
         try {
             // Authenticate user
-            String token = extractAndValidateToken(exchange);
+            extractAndValidateToken(exchange);
 
             // Get dashboard statistics
             Map<String, Object> statistics = dashboardService.getDashboardStatistics();
@@ -121,7 +121,7 @@ public class DashboardController implements HttpHandler {
     private void handleGetRoomStatus(HttpExchange exchange) throws IOException {
         try {
             // Authenticate user
-            String token = extractAndValidateToken(exchange);
+            extractAndValidateToken(exchange);
 
             // Get room status counts
             Map<String, Integer> statusCounts = dashboardService.getRoomStatusCounts();

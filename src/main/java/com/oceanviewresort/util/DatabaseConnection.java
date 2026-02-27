@@ -18,7 +18,6 @@ import java.util.Properties;
 public class DatabaseConnection {
 
     private static final int POOL_SIZE = 10;
-    private static final int MAX_TIMEOUT = 5000; // 5 seconds
 
     private static String DB_URL;
     private static String DB_USERNAME;

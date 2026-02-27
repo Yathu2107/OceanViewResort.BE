@@ -60,7 +60,6 @@ public class EmailService {
         props.put("mail.smtp.host", SMTP_HOST);
         props.put("mail.smtp.port", SMTP_PORT);
 
-        final String fromEmail = FROM_EMAIL;
         final String password = SMTP_PASSWORD;
 
         Session session = Session.getInstance(props,
@@ -203,7 +202,6 @@ public class EmailService {
         props.put("mail.smtp.host", SMTP_HOST);
         props.put("mail.smtp.port", SMTP_PORT);
 
-        final String fromEmail = FROM_EMAIL;
         final String password = SMTP_PASSWORD;
 
         Session session = Session.getInstance(props,

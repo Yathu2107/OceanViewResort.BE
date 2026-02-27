@@ -2,11 +2,17 @@ package com.oceanviewresort.util;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
+import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 public class JwtUtil {
 
-    private static final String SECRET_KEY = "OceanViewSecretKey";
+    private static final String SECRET_KEY = ConfigLoader.getProperty(
+            "jwt.secret",
+            "OceanViewResortSecretKey2024!@#$%^&*()" // Fallback if property not found
+    );
     private static final long EXPIRATION_TIME = 60 * 60 * 1000; // 1 hour
 
     public static String generateToken(String username, String role) {
@@ -19,8 +25,7 @@ public class JwtUtil {
 
         String payload = String.format(
                 "{\"sub\":\"%s\",\"role\":\"%s\",\"iat\":%d,\"exp\":%d}",
-                username, role, now, expiry
-        );
+                username, role, now, expiry);
 
         String encodedPayload = Base64.getUrlEncoder()
                 .withoutPadding()
@@ -34,13 +39,16 @@ public class JwtUtil {
     public static boolean validateToken(String token) {
         try {
             String[] parts = token.split("\\.");
-            if (parts.length != 3) return false;
+            if (parts.length != 3)
+                return false;
 
             String expectedSignature = sign(parts[0] + "." + parts[1]);
-            if (!expectedSignature.equals(parts[2])) return false;
+            if (!expectedSignature.equals(parts[2]))
+                return false;
 
-            String payloadJson = new String(Base64.getUrlDecoder().decode(parts[1]));
-            long exp = Long.parseLong(payloadJson.split("\"exp\":")[1].split("}")[0]);
+            String payloadJson = new String(Base64.getUrlDecoder().decode(parts[1]), StandardCharsets.UTF_8);
+            JsonObject payload = JsonParser.parseString(payloadJson).getAsJsonObject();
+            long exp = payload.get("exp").getAsLong();
 
             return System.currentTimeMillis() < exp;
         } catch (Exception e) {
@@ -51,11 +59,12 @@ public class JwtUtil {
     public static String getUsernameFromToken(String token) {
         try {
             String[] parts = token.split("\\.");
-            if (parts.length != 3) return null;
+            if (parts.length != 3)
+                return null;
 
-            String payloadJson = new String(Base64.getUrlDecoder().decode(parts[1]));
-            String username = payloadJson.split("\"sub\":\"")[1].split("\"")[0];
-            return username;
+            String payloadJson = new String(Base64.getUrlDecoder().decode(parts[1]), StandardCharsets.UTF_8);
+            JsonObject payload = JsonParser.parseString(payloadJson).getAsJsonObject();
+            return payload.get("sub").getAsString();
         } catch (Exception e) {
             return null;
         }
@@ -64,11 +73,12 @@ public class JwtUtil {
     public static String getRoleFromToken(String token) {
         try {
             String[] parts = token.split("\\.");
-            if (parts.length != 3) return null;
+            if (parts.length != 3)
+                return null;
 
-            String payloadJson = new String(Base64.getUrlDecoder().decode(parts[1]));
-            String role = payloadJson.split("\"role\":\"")[1].split("\"")[0];
-            return role;
+            String payloadJson = new String(Base64.getUrlDecoder().decode(parts[1]), StandardCharsets.UTF_8);
+            JsonObject payload = JsonParser.parseString(payloadJson).getAsJsonObject();
+            return payload.get("role").getAsString();
         } catch (Exception e) {
             return null;
         }

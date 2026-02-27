@@ -2,9 +2,9 @@ package com.oceanviewresort.controller;
 
 import com.oceanviewresort.model.Bill;
 import com.oceanviewresort.service.BillingService;
-import com.oceanviewresort.service.UserService;
 import com.oceanviewresort.util.JsonUtil;
 import com.oceanviewresort.util.TokenBlacklist;
+import com.oceanviewresort.util.JwtUtil;
 import com.google.gson.JsonObject;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
@@ -14,7 +14,6 @@ import java.io.IOException;
 public class BillingController implements HttpHandler {
 
     private final BillingService billingService = new BillingService();
-    private final UserService userService = new UserService();
 
     @Override
     public void handle(HttpExchange exchange) throws IOException {
@@ -61,7 +60,7 @@ public class BillingController implements HttpHandler {
             return false;
         }
 
-        if (!userService.validateToken(token)) {
+        if (!JwtUtil.validateToken(token)) {
             JsonUtil.sendError(exchange, 401, "Invalid token");
             return false;
         }

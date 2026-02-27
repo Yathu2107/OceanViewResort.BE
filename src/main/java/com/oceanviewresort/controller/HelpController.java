@@ -2,7 +2,6 @@ package com.oceanviewresort.controller;
 
 import com.oceanviewresort.service.UserService;
 import com.oceanviewresort.util.JsonUtil;
-import com.oceanviewresort.util.JwtUtil;
 import com.oceanviewresort.util.TokenBlacklist;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonArray;

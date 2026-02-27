@@ -77,7 +77,7 @@ public class GuestController implements HttpHandler {
     private void handleAddGuest(HttpExchange exchange) throws IOException {
         try {
             // Authenticate user
-            String token = extractAndValidateToken(exchange);
+            extractAndValidateToken(exchange);
 
             // Parse request body
             String body = new String(exchange.getRequestBody().readAllBytes());
@@ -126,7 +126,7 @@ public class GuestController implements HttpHandler {
     private void handleUpdateGuest(HttpExchange exchange) throws IOException {
         try {
             // Authenticate user
-            String token = extractAndValidateToken(exchange);
+            extractAndValidateToken(exchange);
 
             // Extract guest ID from path
             String path = exchange.getRequestURI().getPath();
@@ -177,7 +177,7 @@ public class GuestController implements HttpHandler {
     private void handleGetGuestByContactNumber(HttpExchange exchange) throws IOException {
         try {
             // Authenticate user
-            String token = extractAndValidateToken(exchange);
+            extractAndValidateToken(exchange);
 
             // Extract contact_number from query parameters
             String query = exchange.getRequestURI().getQuery();
@@ -241,7 +241,7 @@ public class GuestController implements HttpHandler {
     private void handleGetAllGuests(HttpExchange exchange) throws IOException {
         try {
             // Authenticate user
-            String token = extractAndValidateToken(exchange);
+            extractAndValidateToken(exchange);
 
             // Get all guests
             List<Guest> guests = guestService.getAllGuests();
@@ -282,7 +282,7 @@ public class GuestController implements HttpHandler {
     private void handleGetGuestById(HttpExchange exchange) throws IOException {
         try {
             // Authenticate user
-            String token = extractAndValidateToken(exchange);
+            extractAndValidateToken(exchange);
 
             // Extract guest ID from path
             String path = exchange.getRequestURI().getPath();
@@ -324,7 +324,7 @@ public class GuestController implements HttpHandler {
     private void handleDeleteGuest(HttpExchange exchange) throws IOException {
         try {
             // Authenticate user
-            String token = extractAndValidateToken(exchange);
+            extractAndValidateToken(exchange);
 
             // Extract guest ID from path
             String path = exchange.getRequestURI().getPath();

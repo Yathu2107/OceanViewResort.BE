@@ -44,7 +44,7 @@ CREATE TABLE rooms (
     room_type ENUM('SINGLE', 'DOUBLE', 'SUITE') NOT NULL,
     capacity INT NOT NULL,
     price_per_night DECIMAL(10, 2) NOT NULL,
-    status ENUM('AVAILABLE', 'BOOKED', 'MAINTENANCE') DEFAULT 'AVAILABLE',
+    status ENUM('AVAILABLE','MAINTENANCE') DEFAULT 'AVAILABLE',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX idx_room_number (room_number),
@@ -155,7 +155,7 @@ INSERT INTO rooms (room_number, room_type, capacity, price_per_night, status) VA
 ('101', 'SINGLE', 1, 100.00, 'AVAILABLE'),
 ('102', 'SINGLE', 1, 100.00, 'AVAILABLE'),
 ('201', 'DOUBLE', 2, 150.00, 'AVAILABLE'),
-('202', 'DOUBLE', 2, 150.00, 'BOOKED'),
+('202', 'DOUBLE', 2, 150.00, 'MAINTENANCE'),
 ('301', 'SUITE', 4, 250.00, 'AVAILABLE'),
 ('302', 'SUITE', 4, 250.00, 'MAINTENANCE');
 

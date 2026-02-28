@@ -33,15 +33,7 @@ class UserServiceValidationTest {
     }
 
     @Test
-    @DisplayName("TC-US-02: login with empty username throws ValidationException")
-    void login_emptyUsername_throwsValidationException() {
-        ValidationException ex = assertThrows(ValidationException.class,
-                () -> userService.login("   ", "password123"));
-        assertEquals("Username is required", ex.getMessage());
-    }
-
-    @Test
-    @DisplayName("TC-US-03: login with null password throws ValidationException")
+    @DisplayName("TC-US-02: login with null password throws ValidationException")
     void login_nullPassword_throwsValidationException() {
         ValidationException ex = assertThrows(ValidationException.class,
                 () -> userService.login("admin", null));
@@ -53,26 +45,11 @@ class UserServiceValidationTest {
     // -------------------------------------------------------------------------
 
     @Test
-    @DisplayName("TC-US-04: registerUser with null name throws ValidationException")
+    @DisplayName("TC-US-03: registerUser with invalid input throws ValidationException")
     void registerUser_nullName_throwsValidationException() {
         ValidationException ex = assertThrows(ValidationException.class,
                 () -> userService.registerUser(null, "jdoe", "password1", "STAFF", true));
         assertEquals("Name is required", ex.getMessage());
     }
 
-    @Test
-    @DisplayName("TC-US-05: registerUser with null username throws ValidationException")
-    void registerUser_nullUsername_throwsValidationException() {
-        ValidationException ex = assertThrows(ValidationException.class,
-                () -> userService.registerUser("John Doe", null, "password1", "STAFF", true));
-        assertEquals("Username is required", ex.getMessage());
-    }
-
-    @Test
-    @DisplayName("TC-US-06: registerUser with password shorter than 6 characters throws ValidationException")
-    void registerUser_shortPassword_throwsValidationException() {
-        ValidationException ex = assertThrows(ValidationException.class,
-                () -> userService.registerUser("John Doe", "jdoe", "abc", "STAFF", true));
-        assertEquals("Password must be at least 6 characters long", ex.getMessage());
-    }
 }

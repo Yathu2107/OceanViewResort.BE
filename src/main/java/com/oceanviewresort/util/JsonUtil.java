@@ -29,12 +29,20 @@ public class JsonUtil {
         return JsonParser.parseString(body).getAsJsonObject();
     }
 
+    /* ADD CORS HEADERS TO EVERY RESPONSE */
+    private static void addCorsHeaders(HttpExchange exchange) {
+        exchange.getResponseHeaders().set("Access-Control-Allow-Origin", "*");
+        exchange.getResponseHeaders().set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+        exchange.getResponseHeaders().set("Access-Control-Allow-Headers", "Content-Type, Authorization");
+    }
+
     /* SEND JSON RESPONSE */
     public static void sendJson(HttpExchange exchange, Object body) throws IOException {
         ApiResponse<Object> response = new ApiResponse<>("S", "Success", "200", body);
         String json = gson.toJson(response);
         byte[] responseBytes = json.getBytes(StandardCharsets.UTF_8);
 
+        addCorsHeaders(exchange);
         exchange.getResponseHeaders().set("Content-Type", "application/json; charset=UTF-8");
         exchange.sendResponseHeaders(200, responseBytes.length);
 
@@ -49,6 +57,7 @@ public class JsonUtil {
         String json = gson.toJson(response);
         byte[] responseBytes = json.getBytes(StandardCharsets.UTF_8);
 
+        addCorsHeaders(exchange);
         exchange.getResponseHeaders().set("Content-Type", "application/json; charset=UTF-8");
         exchange.sendResponseHeaders(200, responseBytes.length);
 
@@ -63,6 +72,7 @@ public class JsonUtil {
         String json = gson.toJson(response);
         byte[] responseBytes = json.getBytes(StandardCharsets.UTF_8);
 
+        addCorsHeaders(exchange);
         exchange.getResponseHeaders().set("Content-Type", "application/json; charset=UTF-8");
         exchange.sendResponseHeaders(statusCode, responseBytes.length);
 

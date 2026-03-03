@@ -72,6 +72,19 @@ public class Main {
                         System.out.printf("[%s] %s %s from %s%n",
                                         timestamp, method, uri, clientAddress);
 
+                        // Handle CORS preflight (OPTIONS) before passing to controller
+                        if (method.equalsIgnoreCase("OPTIONS")) {
+                                exchange.getResponseHeaders().set("Access-Control-Allow-Origin", "*");
+                                exchange.getResponseHeaders().set("Access-Control-Allow-Methods",
+                                                "GET, POST, PUT, DELETE, OPTIONS");
+                                exchange.getResponseHeaders().set("Access-Control-Allow-Headers",
+                                                "Content-Type, Authorization");
+                                exchange.getResponseHeaders().set("Access-Control-Max-Age", "86400");
+                                exchange.sendResponseHeaders(204, -1);
+                                System.out.printf("[%s] %s %s - 204 (CORS preflight)%n", timestamp, method, uri);
+                                return;
+                        }
+
                         long startTime = System.currentTimeMillis();
 
                         handler.handle(exchange);

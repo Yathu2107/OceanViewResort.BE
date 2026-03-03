@@ -23,7 +23,7 @@ class BillingServiceTest {
     // -------------------------------------------------------------------------
 
     @Test
-    @DisplayName("TC-BILL-01: Bill calculates total amount as nights × room rate")
+    @DisplayName("TC-UT-13: Bill calculates total amount as nights × room rate")
     void billCalculation_totalAmount_equalsNightsTimesRate() {
         // Test case: 3 nights × $100/night = $300
         int nights = 3;
@@ -34,7 +34,7 @@ class BillingServiceTest {
     }
 
     @Test
-    @DisplayName("TC-BILL-02: Bill calculation with decimal room rate (152.50/night for 5 nights = 762.50)")
+    @DisplayName("TC-UT-14: Bill calculation with decimal rate: 5 nights × $152.50 = $762.50")
     void billCalculation_decimalRate_calculatesCorrectly() {
         int nights = 5;
         double roomRate = 152.50;
@@ -48,7 +48,7 @@ class BillingServiceTest {
     // -------------------------------------------------------------------------
 
     @Test
-    @DisplayName("TC-BILL-03: Night count for week-long stay (7 days = 6 nights)")
+    @DisplayName("TC-UT-15: Night count for 7-day stay returns 6 nights")
     void nightComputation_weekStay_returnsSixNights() {
         LocalDate checkIn = LocalDate.of(2024, 7, 1);
         LocalDate checkOut = LocalDate.of(2024, 7, 7);

@@ -20,7 +20,7 @@ class GuestServiceValidationTest {
     // -------------------------------------------------------------------------
 
     @Test
-    @DisplayName("TC-GS-01: addGuest with null name throws ValidationException")
+    @DisplayName("TC-UT-04: addGuest with null name throws ValidationException")
     void addGuest_nullName_throwsValidationException() {
         ValidationException ex = assertThrows(ValidationException.class,
                 () -> guestService.addGuest(null, "123 Street", "07911123456", "a@b.com"));
@@ -32,7 +32,7 @@ class GuestServiceValidationTest {
     // -------------------------------------------------------------------------
 
     @Test
-    @DisplayName("TC-GS-02: addGuest with an email missing '@' throws ValidationException")
+    @DisplayName("TC-UT-05: addGuest with an email missing '@' throws ValidationException")
     void addGuest_emailMissingAtSign_throwsValidationException() {
         ValidationException ex = assertThrows(ValidationException.class,
                 () -> guestService.addGuest("Alice", "Addr", "07911000000", "notanemail"));

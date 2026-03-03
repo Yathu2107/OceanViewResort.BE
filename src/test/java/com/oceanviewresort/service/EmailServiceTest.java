@@ -23,7 +23,7 @@ class EmailServiceTest {
     // -------------------------------------------------------------------------
 
     @Test
-    @DisplayName("TC-EMAIL-01: Bill email includes total amount calculation")
+    @DisplayName("TC-UT-16: Bill email payload holds correct total amount")
     void sendBillEmail_includesTotalAmount() {
         Bill bill = new Bill();
         bill.setBillId(101);
@@ -34,7 +34,7 @@ class EmailServiceTest {
     }
 
     @Test
-    @DisplayName("TC-EMAIL-02: Reservation email includes guest contact information")
+    @DisplayName("TC-UT-17: Reservation email contains valid guest email address")
     void sendReservationEmail_includesGuestEmail() {
         Guest guest = new Guest(1, "John Doe", "123 St", "1234567890", "john@example.com");
         Reservation res = new Reservation();

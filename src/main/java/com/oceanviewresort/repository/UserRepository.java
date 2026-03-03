@@ -9,6 +9,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Repository for User entity
@@ -19,6 +21,7 @@ public class UserRepository {
 
     /**
      * Find user by username
+     * 
      * @param username The username to search for
      * @return User object or null if not found
      */
@@ -57,6 +60,7 @@ public class UserRepository {
 
     /**
      * Find user by UUID
+     * 
      * @param id The user UUID
      * @return User object or null if not found
      */
@@ -94,8 +98,45 @@ public class UserRepository {
     }
 
     /**
+     * Find all users
+     * 
+     * @return List of all users
+     */
+    public List<User> findAll() {
+        String sql = "SELECT id, name, username, role, is_active FROM users ORDER BY name ASC";
+
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+
+        try {
+            conn = DatabaseConnection.getConnection();
+            ps = conn.prepareStatement(sql);
+            rs = ps.executeQuery();
+
+            List<User> users = new ArrayList<>();
+            while (rs.next()) {
+                User user = new User();
+                user.setId(rs.getString("id"));
+                user.setName(rs.getString("name"));
+                user.setUsername(rs.getString("username"));
+                user.setRole(rs.getString("role"));
+                user.setActive(rs.getBoolean("is_active"));
+                users.add(user);
+            }
+            return users;
+
+        } catch (SQLException e) {
+            throw new DatabaseException("Failed to fetch all users", e);
+        } finally {
+            closeResources(rs, ps, conn);
+        }
+    }
+
+    /**
      * Create a new user with UUID and hashed password
-     * @param user The user to create
+     * 
+     * @param user          The user to create
      * @param plainPassword The plain text password to hash
      * @return The UUID of the created user
      */
@@ -140,7 +181,8 @@ public class UserRepository {
 
     /**
      * Update user password with hashing
-     * @param userId The user UUID
+     * 
+     * @param userId        The user UUID
      * @param plainPassword The new plain text password
      */
     public void updatePassword(String userId, String plainPassword) {
@@ -173,6 +215,7 @@ public class UserRepository {
 
     /**
      * Update user details (name, role, is_active)
+     * 
      * @param user The user with updated details
      */
     public void updateUser(User user) {
@@ -205,7 +248,8 @@ public class UserRepository {
 
     /**
      * Update user active status
-     * @param userId The user UUID
+     * 
+     * @param userId   The user UUID
      * @param isActive The active status
      */
     public void updateUserStatus(String userId, boolean isActive) {
@@ -236,6 +280,7 @@ public class UserRepository {
 
     /**
      * Check if a username already exists
+     * 
      * @param username The username to check
      * @return true if exists, false otherwise
      */

@@ -9,6 +9,8 @@ import com.oceanviewresort.repository.UserRepository;
 import com.oceanviewresort.util.JwtUtil;
 import com.oceanviewresort.util.PasswordUtil;
 
+import java.util.List;
+
 /**
  * Service layer for User operations
  * Handles business logic for authentication and user management
@@ -19,6 +21,7 @@ public class UserService {
 
     /**
      * Authenticate a user with a username and password
+     * 
      * @param username The username
      * @param password The plain text password
      * @return JWT token if authentication successful
@@ -53,11 +56,12 @@ public class UserService {
 
     /**
      * Register a new user with a hashed password
-     * @param name The full name
-     * @param username The username
+     * 
+     * @param name          The full name
+     * @param username      The username
      * @param plainPassword The plain text password
-     * @param role The user role (ADMIN, STAFF, etc.)
-     * @param isActive The active status
+     * @param role          The user role (ADMIN, STAFF, etc.)
+     * @param isActive      The active status
      * @return The UUID of the created user
      */
     public String registerUser(String name, String username, String plainPassword, String role, boolean isActive) {
@@ -96,6 +100,7 @@ public class UserService {
 
     /**
      * Get user details by username
+     * 
      * @param username The username
      * @return User object without password
      */
@@ -117,10 +122,43 @@ public class UserService {
     }
 
     /**
-     * Update user details (name, role, active status)
+     * Get all users (passwords excluded)
+     * 
+     * @return List of all users
+     */
+    public List<User> getAllUsers() {
+        List<User> users = userRepository.findAll();
+        users.forEach(u -> u.setPassword(null));
+        return users;
+    }
+
+    /**
+     * Get user details by ID
+     * 
      * @param userId The user UUID
-     * @param name The updated name
-     * @param role The updated role
+     * @return User object without password
+     */
+    public User getUserById(String userId) {
+        if (userId == null || userId.trim().isEmpty()) {
+            throw new ValidationException("User ID is required");
+        }
+
+        User user = userRepository.findById(userId);
+
+        if (user == null) {
+            throw new UserNotFoundException("User not found");
+        }
+
+        user.setPassword(null);
+        return user;
+    }
+
+    /**
+     * Update user details (name, role, active status)
+     * 
+     * @param userId   The user UUID
+     * @param name     The updated name
+     * @param role     The updated role
      * @param isActive The updated active status
      */
     public void updateUser(String userId, String name, String role, Boolean isActive) {
@@ -147,7 +185,8 @@ public class UserService {
 
     /**
      * Change user password
-     * @param userId The user UUID
+     * 
+     * @param userId      The user UUID
      * @param oldPassword The old plain text password
      * @param newPassword The new plain text password
      */
@@ -174,6 +213,7 @@ public class UserService {
 
     /**
      * Validate JWT token
+     * 
      * @param token The JWT token
      * @return true if valid, false otherwise
      */
@@ -183,7 +223,8 @@ public class UserService {
 
     /**
      * Activate or deactivate a user account
-     * @param userId The user UUID
+     * 
+     * @param userId   The user UUID
      * @param isActive The active status
      */
     public void updateUserStatus(String userId, boolean isActive) {

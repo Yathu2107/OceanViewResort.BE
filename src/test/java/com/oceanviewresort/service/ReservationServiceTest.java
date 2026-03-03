@@ -24,7 +24,7 @@ class ReservationServiceTest {
     // -------------------------------------------------------------------------
 
     @Test
-    @DisplayName("TC-RES-01: Reservation requires valid guest with ID > 0")
+    @DisplayName("TC-UT-09: Reservation with null guest returns null for getGuest()")
     void reservation_requiresValidGuest() {
         Reservation res = new Reservation();
         res.setGuest(null);
@@ -33,7 +33,7 @@ class ReservationServiceTest {
     }
 
     @Test
-    @DisplayName("TC-RES-02: Reservation requires at least one room")
+    @DisplayName("TC-UT-10: Reservation correctly stores room IDs")
     void reservation_requiresAtLeastOneRoom() {
         Reservation res = new Reservation();
 
@@ -43,7 +43,7 @@ class ReservationServiceTest {
     }
 
     @Test
-    @DisplayName("TC-RES-03: Check-out date must be strictly after check-in date")
+    @DisplayName("TC-UT-11: Check-out date before check-in is correctly detected")
     void reservation_dateValidation_checkOutAfterCheckIn() {
         LocalDate checkIn = LocalDate.of(2024, 7, 10);
         LocalDate checkOut = LocalDate.of(2024, 7, 5); // Before check-in
@@ -53,7 +53,7 @@ class ReservationServiceTest {
     }
 
     @Test
-    @DisplayName("TC-RES-04: Reservation correctly calculates length of stay")
+    @DisplayName("TC-UT-12: Reservation correctly calculates length of stay as 5 nights")
     void reservation_stayDuration_calculation() {
         LocalDate checkIn = LocalDate.of(2024, 8, 1);
         LocalDate checkOut = LocalDate.of(2024, 8, 6);

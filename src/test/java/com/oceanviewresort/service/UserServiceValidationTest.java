@@ -21,7 +21,7 @@ class UserServiceValidationTest {
     private final UserService userService = new UserService();
 
     // -------------------------------------------------------------------------
-    // REQ-USER-04: Login Validation
+    // REQ-USER-01: Login Validation
     // -------------------------------------------------------------------------
 
     @Test
@@ -41,7 +41,7 @@ class UserServiceValidationTest {
     }
 
     // -------------------------------------------------------------------------
-    // REQ-USER-05 & REQ-USER-06: Registration Validation
+    // REQ-USER-03 : Registration Validation
     // -------------------------------------------------------------------------
 
     @Test

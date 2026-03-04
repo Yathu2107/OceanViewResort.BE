@@ -41,7 +41,13 @@ CREATE TABLE guests (
 CREATE TABLE rooms (
     id INT PRIMARY KEY AUTO_INCREMENT,
     room_number VARCHAR(10) UNIQUE NOT NULL,
-    room_type ENUM('SINGLE', 'DOUBLE', 'SUITE') NOT NULL,
+    room_type ENUM(
+        'STANDARD SINGLE', 'STANDARD DOUBLE', 'STANDARD TWIN',
+        'DELUXE SINGLE', 'DELUXE DOUBLE', 'DELUXE TWIN', 'DELUXE FAMILY',
+        'SUPERIOR DOUBLE', 'SUPERIOR TWIN', 'SUPERIOR FAMILY',
+        'SUITE SEA VIEW', 'SUITE CITY VIEW', 'EXECUTIVE SUITE',
+        'FAMILY SUITE', 'PRESIDENTIAL SUITE'
+    ) NOT NULL,
     capacity INT NOT NULL,
     price_per_night DECIMAL(10, 2) NOT NULL,
     status ENUM('AVAILABLE','MAINTENANCE') DEFAULT 'AVAILABLE',
@@ -92,67 +98,6 @@ CREATE TABLE bills (
     INDEX idx_reservation_id (reservation_id),
     INDEX idx_generated_date (generated_date)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- Insert default admin user (password: admin123)
--- BCrypt hashed password for 'admin123' with work factor 12
-INSERT INTO users (id, name, username, password, role, is_active)
-VALUES ('550e8400-e29b-41d4-a716-446655440000',
-        'System Administrator',
-        'admin',
-        'TEMP_HASH_WILL_BE_REPLACED',
-        'MANAGER',
-        TRUE);
-
--- Insert default staff user (password: staff123)
--- BCrypt hashed password for 'staff123' with work factor 12
-INSERT INTO users (id, name, username, password, role, is_active)
-VALUES ('550e8400-e29b-41d4-a716-446655440001',
-        'Staff User',
-        'staff',
-        'TEMP_HASH_WILL_BE_REPLACED',
-        'STAFF',
-        TRUE);
-
--- Insert sample guests for testing
-INSERT INTO guests (name, address, contact_number, email) VALUES
-('John Doe', '123 Main St, New York', '+1-555-0101', 'john.doe@email.com'),
-('Jane Smith', '456 Oak Ave, Los Angeles', '+1-555-0102', 'jane.smith@email.com'),
-('Robert Johnson', '789 Pine Rd, Chicago', '+1-555-0103', 'robert.j@email.com');
-
--- Insert sample reservations for testing
-INSERT INTO reservations (guest_id, check_in, check_out, status) VALUES
-(1, '2026-03-01', '2026-03-05', 'OCCUPIED'),
-(2, '2026-03-10', '2026-03-15', 'OCCUPIED'),
-(3, '2026-03-20', '2026-03-23', 'COMPLETED');
-
--- Insert room assignments for reservations (junction table)
--- Reservation 1 (Guest John Doe) has 2 rooms
-INSERT INTO reservation_rooms (reservation_id, room_id) VALUES
-(1, 1),
-(1, 2);
-
--- Reservation 2 (Guest Jane Smith) has 1 room
-INSERT INTO reservation_rooms (reservation_id, room_id) VALUES
-(2, 3);
-
--- Reservation 3 (Guest Robert Johnson) has 1 room
-INSERT INTO reservation_rooms (reservation_id, room_id) VALUES
-(3, 5);
-
--- Insert sample bills for testing
-INSERT INTO bills (reservation_id, total_amount, generated_date) VALUES
-(1, 600.00, '2026-03-05'),
-(2, 1250.00, '2026-03-15'),
-(3, 300.00, '2026-03-23');
-
--- Insert sample rooms for testing
-INSERT INTO rooms (room_number, room_type, capacity, price_per_night, status) VALUES
-('101', 'SINGLE', 1, 100.00, 'AVAILABLE'),
-('102', 'SINGLE', 1, 100.00, 'AVAILABLE'),
-('201', 'DOUBLE', 2, 150.00, 'AVAILABLE'),
-('202', 'DOUBLE', 2, 150.00, 'MAINTENANCE'),
-('301', 'SUITE', 4, 250.00, 'AVAILABLE'),
-('302', 'SUITE', 4, 250.00, 'MAINTENANCE');
 
 -- Display a success message
 SELECT 'Database schema created successfully!' as Message;

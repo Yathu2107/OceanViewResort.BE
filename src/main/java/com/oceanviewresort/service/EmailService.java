@@ -277,7 +277,8 @@ public class EmailService {
                     + "</td></tr>\n" +
                     "                    <tr><td>Contact Number:</td><td>" + reservation.getGuest().getContactNumber()
                     + "</td></tr>\n" +
-                    "                    <tr><td>Room Numbers:</td><td>" + formatRoomNumbers(reservation.getRoomIds())
+                    "                    <tr><td>Room Numbers:</td><td>"
+                    + formatRoomNumbers(reservation.getRoomNumbers())
                     + "</td></tr>\n" +
                     "                    <tr><td>Number of Rooms:</td><td>" + reservation.getRoomIds().size()
                     + "</td></tr>\n" +
@@ -338,17 +339,17 @@ public class EmailService {
 
     /**
      * Format room numbers for email display
-     * Converts List<Integer> to comma-separated string (e.g., "101, 102, 103")
+     * Converts List<String> to comma-separated string (e.g., "101, 102, 103")
      */
-    private static String formatRoomNumbers(java.util.List<Integer> roomIds) {
-        if (roomIds == null || roomIds.isEmpty()) {
+    private static String formatRoomNumbers(java.util.List<String> roomNumbers) {
+        if (roomNumbers == null || roomNumbers.isEmpty()) {
             return "N/A";
         }
         StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < roomIds.size(); i++) {
+        for (int i = 0; i < roomNumbers.size(); i++) {
             if (i > 0)
                 sb.append(", ");
-            sb.append(roomIds.get(i));
+            sb.append(roomNumbers.get(i));
         }
         return sb.toString();
     }

@@ -79,7 +79,6 @@ public class DashboardController implements HttpHandler {
             Map<String, Integer> roomStats = (Map<String, Integer>) statistics.get("room_statistics");
             JsonObject roomStatsJson = new JsonObject();
             roomStatsJson.addProperty("available", roomStats.get("AVAILABLE"));
-            roomStatsJson.addProperty("booked", roomStats.get("BOOKED"));
             roomStatsJson.addProperty("maintenance", roomStats.get("MAINTENANCE"));
             roomStatsJson.addProperty("total", roomStats.get("TOTAL"));
             response.add("room_statistics", roomStatsJson);
@@ -94,12 +93,13 @@ public class DashboardController implements HttpHandler {
                 JsonObject percentagesJson = new JsonObject();
                 percentagesJson.addProperty("available_percentage",
                         String.format("%.2f", percentages.get("available_percentage")));
-                percentagesJson.addProperty("booked_percentage",
-                        String.format("%.2f", percentages.get("booked_percentage")));
                 percentagesJson.addProperty("maintenance_percentage",
                         String.format("%.2f", percentages.get("maintenance_percentage")));
                 response.add("percentages", percentagesJson);
             }
+
+            // Add total revenue
+            response.addProperty("total_revenue", dashboardService.getTotalRevenue());
 
             JsonUtil.sendJsonWithMessage(exchange, "Dashboard statistics retrieved successfully", response);
 
@@ -129,7 +129,6 @@ public class DashboardController implements HttpHandler {
             // Build response
             JsonObject response = new JsonObject();
             response.addProperty("available_rooms", statusCounts.get("AVAILABLE"));
-            response.addProperty("booked_rooms", statusCounts.get("BOOKED"));
             response.addProperty("maintenance_rooms", statusCounts.get("MAINTENANCE"));
             response.addProperty("total_rooms", statusCounts.get("TOTAL"));
 

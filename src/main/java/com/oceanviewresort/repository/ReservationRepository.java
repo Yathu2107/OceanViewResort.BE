@@ -161,6 +161,44 @@ public class ReservationRepository {
     }
 
     /**
+     * Find all reservations with guest details and associated rooms
+     *
+     * @return List of all reservations ordered by check-in date descending
+     */
+    public List<Reservation> findAll() {
+        String sql = "SELECT r.id, r.guest_id, r.check_in, r.check_out, r.status, " +
+                "g.name, g.address, g.contact_number, g.email " +
+                "FROM reservations r " +
+                "JOIN guests g ON r.guest_id = g.id " +
+                "ORDER BY r.check_in DESC";
+
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        List<Reservation> reservations = new ArrayList<>();
+
+        try {
+            conn = DatabaseConnection.getConnection();
+            ps = conn.prepareStatement(sql);
+            rs = ps.executeQuery();
+
+            while (rs.next()) {
+                Reservation reservation = mapResultSetToReservation(rs);
+                List<Integer> roomIds = getRoomsByReservationId(reservation.getReservationId());
+                reservation.setRoomIds(roomIds);
+                reservations.add(reservation);
+            }
+
+            return reservations;
+
+        } catch (SQLException e) {
+            throw new DatabaseException("Failed to fetch all reservations", e);
+        } finally {
+            closeResources(rs, ps, conn);
+        }
+    }
+
+    /**
      * Update reservation status
      * 
      * @param reservationId The reservation ID

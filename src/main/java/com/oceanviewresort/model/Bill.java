@@ -7,8 +7,7 @@ public class Bill {
 
     private int billId;
     private Reservation reservation;
-    private int numberOfNights;
-    private double roomRatePerNight;
+    private int numberOfNights; // computed in-memory, not persisted
     private double totalAmount;
     private LocalDate generatedDate;
     private List<RoomDetail> roomDetails; // Room-wise breakdown
@@ -64,11 +63,10 @@ public class Bill {
     }
 
     public Bill(int billId, Reservation reservation, int numberOfNights,
-            double roomRatePerNight, double totalAmount, LocalDate generatedDate) {
+            double totalAmount, LocalDate generatedDate) {
         this.billId = billId;
         this.reservation = reservation;
         this.numberOfNights = numberOfNights;
-        this.roomRatePerNight = roomRatePerNight;
         this.totalAmount = totalAmount;
         this.generatedDate = generatedDate;
     }
@@ -95,14 +93,6 @@ public class Bill {
 
     public void setNumberOfNights(int numberOfNights) {
         this.numberOfNights = numberOfNights;
-    }
-
-    public double getRoomRatePerNight() {
-        return roomRatePerNight;
-    }
-
-    public void setRoomRatePerNight(double roomRatePerNight) {
-        this.roomRatePerNight = roomRatePerNight;
     }
 
     public double getTotalAmount() {

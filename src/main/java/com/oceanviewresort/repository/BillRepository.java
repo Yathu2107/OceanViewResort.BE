@@ -21,8 +21,8 @@ public class BillRepository {
      * @param bill The bill to save
      */
     public void saveBill(Bill bill) {
-        String sql = "INSERT INTO bills (reservation_id, nights, rate_per_night, total_amount, generated_date) " +
-                     "VALUES (?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO bills (reservation_id, total_amount, generated_date) " +
+                "VALUES (?, ?, ?)";
 
         Connection conn = null;
         PreparedStatement ps = null;
@@ -33,10 +33,8 @@ public class BillRepository {
             ps = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS);
 
             ps.setInt(1, bill.getReservation().getReservationId());
-            ps.setInt(2, bill.getNumberOfNights());
-            ps.setDouble(3, bill.getRoomRatePerNight());
-            ps.setDouble(4, bill.getTotalAmount());
-            ps.setDate(5, Date.valueOf(bill.getGeneratedDate()));
+            ps.setDouble(2, bill.getTotalAmount());
+            ps.setDate(3, Date.valueOf(bill.getGeneratedDate()));
 
             int affectedRows = ps.executeUpdate();
 
@@ -46,7 +44,7 @@ public class BillRepository {
 
             rs = ps.getGeneratedKeys();
             if (rs.next()) {
-                rs.getInt(1);
+                bill.setBillId(rs.getInt(1));
             } else {
                 throw new DatabaseException("Creating bill failed, no ID obtained");
             }
@@ -60,12 +58,13 @@ public class BillRepository {
 
     /**
      * Find bill by ID
+     * 
      * @param billId The bill ID
      * @return Bill object or null if not found
      */
     public Bill findById(int billId) {
-        String sql = "SELECT id, reservation_id, nights, rate_per_night, total_amount, generated_date " +
-                     "FROM bills WHERE id = ?";
+        String sql = "SELECT id, reservation_id, total_amount, generated_date " +
+                "FROM bills WHERE id = ?";
 
         Connection conn = null;
         PreparedStatement ps = null;
@@ -92,12 +91,13 @@ public class BillRepository {
 
     /**
      * Find bill by reservation ID
+     * 
      * @param reservationId The reservation ID
      * @return Bill object or null if not found
      */
     public Bill findByReservationId(int reservationId) {
-        String sql = "SELECT id, reservation_id, nights, rate_per_night, total_amount, generated_date " +
-                     "FROM bills WHERE reservation_id = ?";
+        String sql = "SELECT id, reservation_id, total_amount, generated_date " +
+                "FROM bills WHERE reservation_id = ?";
 
         Connection conn = null;
         PreparedStatement ps = null;
@@ -124,11 +124,12 @@ public class BillRepository {
 
     /**
      * Find all bills
+     * 
      * @return List of all bills
      */
     public List<Bill> findAll() {
-        String sql = "SELECT id, reservation_id, nights, rate_per_night, total_amount, generated_date " +
-                     "FROM bills ORDER BY generated_date DESC";
+        String sql = "SELECT id, reservation_id, total_amount, generated_date " +
+                "FROM bills ORDER BY generated_date DESC";
 
         Connection conn = null;
         PreparedStatement ps = null;
@@ -154,39 +155,8 @@ public class BillRepository {
     }
 
     /**
-     * Update bill payment status
-     * @param billId The bill ID
-     * @param isPaid Payment status
-     */
-    public void updatePaymentStatus(int billId, boolean isPaid) {
-        String sql = "UPDATE bills SET is_paid = ?, payment_date = ? WHERE id = ?";
-
-        Connection conn = null;
-        PreparedStatement ps = null;
-
-        try {
-            conn = DatabaseConnection.getConnection();
-            ps = conn.prepareStatement(sql);
-
-            ps.setBoolean(1, isPaid);
-            ps.setDate(2, isPaid ? Date.valueOf(java.time.LocalDate.now()) : null);
-            ps.setInt(3, billId);
-
-            int affectedRows = ps.executeUpdate();
-
-            if (affectedRows == 0) {
-                throw new DatabaseException("Bill not found with ID: " + billId);
-            }
-
-        } catch (SQLException e) {
-            throw new DatabaseException("Failed to update payment status for bill ID: " + billId, e);
-        } finally {
-            closeResources(null, ps, conn);
-        }
-    }
-
-    /**
      * Delete a bill
+     * 
      * @param billId The bill ID
      */
     public void deleteBill(int billId) {
@@ -215,6 +185,7 @@ public class BillRepository {
 
     /**
      * Calculate total revenue
+     * 
      * @return Total revenue amount
      */
     public double calculateTotalRevenue() {
@@ -247,8 +218,6 @@ public class BillRepository {
     private Bill mapResultSetToBill(ResultSet rs) throws SQLException {
         Bill bill = new Bill();
         bill.setBillId(rs.getInt("id"));
-        bill.setNumberOfNights(rs.getInt("nights"));
-        bill.setRoomRatePerNight(rs.getDouble("rate_per_night"));
         bill.setTotalAmount(rs.getDouble("total_amount"));
         bill.setGeneratedDate(rs.getDate("generated_date").toLocalDate());
 

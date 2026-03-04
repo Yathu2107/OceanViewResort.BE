@@ -129,6 +129,15 @@ public class ReservationService {
     }
 
     /**
+     * Get all reservations
+     * 
+     * @return List of all reservations
+     */
+    public List<Reservation> getAllReservations() {
+        return reservationRepository.findAll();
+    }
+
+    /**
      * Mark reservation as COMPLETED
      * Use this when guest checks out or reservation ends
      */
@@ -176,7 +185,6 @@ public class ReservationService {
 
         // Fetch room prices from database for each reserved room
         double totalRoomPrice = 0.0;
-        double averageRoomRate = 0.0;
         java.util.List<com.oceanviewresort.model.Bill.RoomDetail> roomDetails = new java.util.ArrayList<>();
 
         for (Integer roomId : reservation.getRoomIds()) {
@@ -192,8 +200,6 @@ public class ReservationService {
                     + " - Total: Rs." + roomTotal);
         }
 
-        averageRoomRate = totalRoomPrice / reservation.getRoomIds().size();
-
         // Calculate total: (number of nights) × (sum of all room prices per night)
         double totalAmount = nights * totalRoomPrice;
 
@@ -206,7 +212,6 @@ public class ReservationService {
         Bill bill = new Bill();
         bill.setReservation(reservation);
         bill.setNumberOfNights((int) nights);
-        bill.setRoomRatePerNight(averageRoomRate);
         bill.setTotalAmount(totalAmount);
         bill.setGeneratedDate(LocalDate.now());
         bill.setRoomDetails(roomDetails);

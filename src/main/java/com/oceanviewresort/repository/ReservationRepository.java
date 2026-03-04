@@ -101,6 +101,10 @@ public class ReservationRepository {
                 List<Integer> roomIds = getRoomsByReservationId(reservationId);
                 reservation.setRoomIds(roomIds);
 
+                // Fetch actual room numbers for email display
+                List<String> roomNumbers = getRoomNumbersByReservationId(reservationId);
+                reservation.setRoomNumbers(roomNumbers);
+
                 System.out.println("[DB QUERY] Retrieved guest email: " + rs.getString("email") +
                         ", Rooms: " + roomIds.size());
                 return reservation;
@@ -493,6 +497,40 @@ public class ReservationRepository {
 
         } catch (SQLException e) {
             throw new DatabaseException("Failed to fetch rooms for reservation ID: " + reservationId, e);
+        } finally {
+            closeResources(rs, ps, conn);
+        }
+    }
+
+    /**
+     * Fetch actual room numbers (e.g., "101", "102") for the given reservation.
+     * Joins reservation_rooms with rooms to get the room_number column.
+     */
+    public List<String> getRoomNumbersByReservationId(int reservationId) {
+        String sql = "SELECT r.room_number FROM rooms r " +
+                "JOIN reservation_rooms rr ON r.id = rr.room_id " +
+                "WHERE rr.reservation_id = ? ORDER BY r.room_number";
+
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        List<String> roomNumbers = new ArrayList<>();
+
+        try {
+            conn = DatabaseConnection.getConnection();
+            ps = conn.prepareStatement(sql);
+            ps.setInt(1, reservationId);
+
+            rs = ps.executeQuery();
+
+            while (rs.next()) {
+                roomNumbers.add(rs.getString("room_number"));
+            }
+
+            return roomNumbers;
+
+        } catch (SQLException e) {
+            throw new DatabaseException("Failed to fetch room numbers for reservation ID: " + reservationId, e);
         } finally {
             closeResources(rs, ps, conn);
         }

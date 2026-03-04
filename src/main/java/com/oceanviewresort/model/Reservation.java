@@ -15,12 +15,14 @@ public class Reservation {
     private int reservationId;
     private Guest guest;
     private List<Integer> roomIds; // Multiple rooms per reservation
+    private List<String> roomNumbers; // Actual room numbers (e.g., "101", "102")
     private LocalDate checkInDate;
     private LocalDate checkOutDate;
     private String status; // OCCUPIED, COMPLETED, CANCELLED
 
     public Reservation() {
         this.roomIds = new ArrayList<>();
+        this.roomNumbers = new ArrayList<>();
     }
 
     public Reservation(int reservationId, Guest guest, List<Integer> roomIds,
@@ -28,6 +30,7 @@ public class Reservation {
         this.reservationId = reservationId;
         this.guest = guest;
         this.roomIds = roomIds != null ? roomIds : new ArrayList<>();
+        this.roomNumbers = new ArrayList<>();
         this.checkInDate = checkInDate;
         this.checkOutDate = checkOutDate;
         this.status = status;
@@ -55,6 +58,14 @@ public class Reservation {
 
     public void setRoomIds(List<Integer> roomIds) {
         this.roomIds = roomIds != null ? roomIds : new ArrayList<>();
+    }
+
+    public List<String> getRoomNumbers() {
+        return roomNumbers;
+    }
+
+    public void setRoomNumbers(List<String> roomNumbers) {
+        this.roomNumbers = roomNumbers != null ? roomNumbers : new ArrayList<>();
     }
 
     public void addRoomId(int roomId) {

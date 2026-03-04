@@ -84,18 +84,13 @@ CREATE TABLE reservation_rooms (
 CREATE TABLE bills (
     id INT PRIMARY KEY AUTO_INCREMENT,
     reservation_id INT NOT NULL,
-    nights INT NOT NULL,
-    rate_per_night DECIMAL(10, 2) NOT NULL,
     total_amount DECIMAL(10, 2) NOT NULL,
     generated_date DATE NOT NULL,
-    is_paid BOOLEAN DEFAULT FALSE,
-    payment_date DATE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (reservation_id) REFERENCES reservations(id) ON DELETE CASCADE,
     INDEX idx_reservation_id (reservation_id),
-    INDEX idx_generated_date (generated_date),
-    INDEX idx_is_paid (is_paid)
+    INDEX idx_generated_date (generated_date)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Insert default admin user (password: admin123)
@@ -145,10 +140,10 @@ INSERT INTO reservation_rooms (reservation_id, room_id) VALUES
 (3, 5);
 
 -- Insert sample bills for testing
-INSERT INTO bills (reservation_id, nights, rate_per_night, total_amount, generated_date, is_paid) VALUES
-(1, 4, 150.00, 600.00, '2026-03-05', FALSE),
-(2, 5, 250.00, 1250.00, '2026-03-15', FALSE),
-(3, 3, 100.00, 300.00, '2026-03-23', FALSE);
+INSERT INTO bills (reservation_id, total_amount, generated_date) VALUES
+(1, 600.00, '2026-03-05'),
+(2, 1250.00, '2026-03-15'),
+(3, 300.00, '2026-03-23');
 
 -- Insert sample rooms for testing
 INSERT INTO rooms (room_number, room_type, capacity, price_per_night, status) VALUES

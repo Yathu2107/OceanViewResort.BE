@@ -45,7 +45,12 @@ public class ReservationController implements HttpHandler {
             } else if (method.equalsIgnoreCase("POST")) {
                 handleAddReservation(exchange);
             } else if (method.equalsIgnoreCase("GET")) {
-                handleGetReservation(exchange);
+                String query = exchange.getRequestURI().getQuery();
+                if (query == null || query.isEmpty()) {
+                    handleGetAllReservations(exchange);
+                } else {
+                    handleGetReservation(exchange);
+                }
             } else if (method.equalsIgnoreCase("PUT")) {
                 handleUpdateReservation(exchange);
             } else if (method.equalsIgnoreCase("DELETE")) {
@@ -89,6 +94,54 @@ public class ReservationController implements HttpHandler {
         reservationService.addReservation(reservation);
 
         JsonUtil.sendMessage(exchange, "Reservation created successfully");
+    }
+
+    /**
+     * GET /reservations - Get all reservations
+     */
+    private void handleGetAllReservations(HttpExchange exchange) throws IOException {
+
+        java.util.List<Reservation> reservations = reservationService.getAllReservations();
+
+        JsonArray reservationsArray = new JsonArray();
+        for (Reservation reservation : reservations) {
+            JsonObject obj = new JsonObject();
+            obj.addProperty("reservationId", reservation.getReservationId());
+
+            // Guest details
+            JsonObject guestJson = new JsonObject();
+            guestJson.addProperty("id", reservation.getGuest().getId());
+            guestJson.addProperty("name", reservation.getGuest().getName());
+            guestJson.addProperty("address", reservation.getGuest().getAddress());
+            guestJson.addProperty("contactNumber", reservation.getGuest().getContactNumber());
+            guestJson.addProperty("email", reservation.getGuest().getEmail());
+            obj.add("guest", guestJson);
+
+            // Room details
+            JsonArray roomsArray = new JsonArray();
+            for (Integer roomId : reservation.getRoomIds()) {
+                Room room = roomRepository.findById(roomId);
+                if (room != null) {
+                    JsonObject roomJson = new JsonObject();
+                    roomJson.addProperty("id", room.getId());
+                    roomJson.addProperty("roomNumber", room.getRoomNumber());
+                    roomJson.addProperty("roomType", room.getRoomType());
+                    roomJson.addProperty("capacity", room.getCapacity());
+                    roomJson.addProperty("pricePerNight", room.getPricePerNight());
+                    roomJson.addProperty("status", room.getStatus());
+                    roomsArray.add(roomJson);
+                }
+            }
+            obj.add("rooms", roomsArray);
+
+            obj.addProperty("checkInDate", reservation.getCheckInDate().toString());
+            obj.addProperty("checkOutDate", reservation.getCheckOutDate().toString());
+            obj.addProperty("status", reservation.getStatus());
+
+            reservationsArray.add(obj);
+        }
+
+        JsonUtil.sendJsonWithMessage(exchange, "Reservations retrieved successfully", reservationsArray);
     }
 
     private void handleGetReservation(HttpExchange exchange) throws IOException {

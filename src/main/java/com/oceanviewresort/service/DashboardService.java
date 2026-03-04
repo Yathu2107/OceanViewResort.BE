@@ -1,5 +1,6 @@
 package com.oceanviewresort.service;
 
+import com.oceanviewresort.repository.BillRepository;
 import com.oceanviewresort.repository.DashboardRepository;
 
 import java.util.HashMap;
@@ -12,6 +13,7 @@ import java.util.Map;
 public class DashboardService {
 
     private final DashboardRepository dashboardRepository = new DashboardRepository();
+    private final BillRepository billRepository = new BillRepository();
 
     /**
      * Get count of rooms by status (AVAILABLE, BOOKED, MAINTENANCE)
@@ -49,6 +51,13 @@ public class DashboardService {
     }
 
     /**
+     * Get total revenue from all bills
+     */
+    public double getTotalRevenue() {
+        return billRepository.calculateTotalRevenue();
+    }
+
+    /**
      * Get comprehensive dashboard statistics
      */
     public Map<String, Object> getDashboardStatistics() {
@@ -66,13 +75,14 @@ public class DashboardService {
         if (totalRooms > 0) {
             Map<String, Double> percentages = new HashMap<>();
             percentages.put("available_percentage",
-                (roomStatusCounts.get("AVAILABLE") * 100.0) / totalRooms);
-            percentages.put("booked_percentage",
-                (roomStatusCounts.get("BOOKED") * 100.0) / totalRooms);
+                    (roomStatusCounts.get("AVAILABLE") * 100.0) / totalRooms);
             percentages.put("maintenance_percentage",
-                (roomStatusCounts.get("MAINTENANCE") * 100.0) / totalRooms);
+                    (roomStatusCounts.get("MAINTENANCE") * 100.0) / totalRooms);
             statistics.put("percentages", percentages);
         }
+
+        // Add total revenue
+        statistics.put("total_revenue", getTotalRevenue());
 
         return statistics;
     }
